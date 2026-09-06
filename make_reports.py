@@ -1,7 +1,8 @@
 # make_reports.py
+from defines import SATURDAY_IDX
 import os
 from fpdf import FPDF
-from defines import GUEST_LIST_IDX_E
+from defines import GUEST_LIST_IDX_E, FRIDAY_IDX, SATURDAY_IDX
 
 def normalize_phone_number(number):
    import re
@@ -19,7 +20,7 @@ def write_expeditor_2column_pdf(guest_list_list, output_directory, expeditor_pdf
       print("Failure: no guest lists in request to generate PDF report on tag files.")
       return False
 
-   pickup_list = []
+   pickup_list = [[],[]]
    # print(f"\nGenerating {pdf_report_path}: {len(guest_list_list)} guest lists.")
    for g_l_index in range(len(guest_list_list)):
       if g_l_index == GUEST_LIST_IDX_E.Delivery.value:
@@ -37,14 +38,13 @@ def write_expeditor_2column_pdf(guest_list_list, output_directory, expeditor_pdf
             print(f"Make expeditor PDF Error: {client_id} missing for {visit_tuple=}")
             continue
          first_name = client_info[client_id][0]
-         last_name = client_info[client_id][1]
+         last_name = client_info[client_id][1][:20]
          phone = normalize_phone_number(client_info[client_id][3])
-         pickup_list.append([visit_tuple[2][:5],first_name,last_name, phone])
-
-   first_guest_on_saturday_index = \
-      len(guest_list_list[GUEST_LIST_IDX_E.Pickup_Friday_before_3.value]) + \
-         len(guest_list_list[GUEST_LIST_IDX_E.Pickup_Friday_after_3.value])
-   # print(f'{pickup_list[first_guest_on_saturday_index]=}')
+         if g_l_index == GUEST_LIST_IDX_E.Pickup_Saturday.value:
+            pickup_list[SATURDAY_IDX].append([visit_tuple[2][:5],first_name,last_name, phone])
+         else:
+            pickup_list[FRIDAY_IDX].append([visit_tuple[2][1:5],first_name,last_name, phone])
+   # print(f"{len(pickup_list[FRIDAY_IDX])=} {len(pickup_list[SATURDAY_IDX])=}")
 
    pdf_report_path = os.path.join(output_directory, f'{expeditor_pdf_filename}')
    try:
@@ -60,82 +60,81 @@ def write_expeditor_2column_pdf(guest_list_list, output_directory, expeditor_pdf
    number_of_rows_on_a_page = 20
    center_spacer_width = 20
    header = ["Bag", "Time", "First", "Last", "Phone"]
-   bag_width = 30
+   bag_width = 26
    route_time_width = 38
-   first_name_width = 60
-   last_name_width = 72
+   first_name_width = 62
+   last_name_width = 74
    phone_width = 78
    widths = (bag_width, route_time_width, first_name_width, last_name_width, phone_width, \
       center_spacer_width, bag_width, route_time_width, first_name_width, last_name_width, phone_width)
    # print(f"there are {len(widths)} columns with a total width of {sum(widths)} pixels; should not exceed {printable_pixels} pixels")
 
-
    guest_list_page_number = 0
-   current_guest = 0
-   page_count = (len(pickup_list) // (number_of_rows_on_a_page * 2)) + 1
-   doing_saturday_pickups = False
-   while current_guest < len(pickup_list):
-      try:
-         pdf.add_page()
-         guest_list_page_number += 1
-         pdf.set_font("Helvetica", "B", size=11)
-         pdf.cell(0,0, f'Pickup expeditor for {this_weeks_date[0][-4:]} & {this_weeks_date[1][-4:]}     Page {guest_list_page_number} of {page_count}', align="C")
-         pdf.ln(pdf.font_size+4)
-         pdf.set_font("Helvetica", "", size=12)
+   page_count = ((len(pickup_list[FRIDAY_IDX]) + len(pickup_list[SATURDAY_IDX])) // (number_of_rows_on_a_page * 2)) + 1
+   for day_index, days_list in enumerate(pickup_list):
+      current_guest = 0
+      while current_guest < len(days_list):
+         try:
+            pdf.add_page()
+            guest_list_page_number += 1
+            pdf.set_font("Helvetica", "B", size=11)
+            pdf.cell(0,0, f'Pickup expeditor for {this_weeks_date[day_index][-4:]}       Page {guest_list_page_number} of {page_count}', align="C")
+            pdf.ln(pdf.font_size+4)
+            pdf.set_font("Helvetica", "", size=12)
 
-         with pdf.table(line_height=24, padding=1, width=sum(widths), col_widths=widths) as table:
-            pdf_table_row = table.row()
-            # header row
-            for column_title in header:
-               pdf_table_row.cell(column_title)
-            if (len(pickup_list) - current_guest) > number_of_rows_on_a_page:
-               # only make second column if there is enough data
-               pdf_table_row.cell("", border=0) # spacer
+            with pdf.table(line_height=24, padding=1, width=sum(widths), col_widths=widths) as table:
+               pdf_table_row = table.row()
+               # header row
                for column_title in header:
                   pdf_table_row.cell(column_title)
-            else:
-               for _ in range(len(header)):
-                  pdf_table_row.cell("", border=0)
-
-            # make dual data columns
-            for row_count in range(number_of_rows_on_a_page):
-               pdf_table_row = table.row()
-               # first column
-               pdf_table_row.cell("") #bags, align="R")
-               pdf.set_font("Helvetica", "", size=14)
-               pdf_table_row.cell(pickup_list[current_guest][0]) #time
-               pdf.set_font("Helvetica", "", size=12)
-               pdf_table_row.cell(pickup_list[current_guest][1]) #first
-               pdf.set_font("Helvetica", "", size=14)
-               pdf_table_row.cell(pickup_list[current_guest][2]) #last
-               pdf.set_font("Helvetica", "", size=12)
-               pdf_table_row.cell(pickup_list[current_guest][3]) #phone
-               # second column
-               second_column_guest = current_guest + number_of_rows_on_a_page
-               if second_column_guest <= len(pickup_list):
-                  pdf_table_row.cell("", border=0) #center spacer
-                  pdf_table_row.cell("") #bags, align="R")
-                  pdf.set_font("Helvetica", "", size=14)
-                  pdf_table_row.cell(pickup_list[second_column_guest][0])
-                  pdf.set_font("Helvetica", "", size=12)
-                  pdf_table_row.cell(pickup_list[second_column_guest][1])
-                  pdf.set_font("Helvetica", "", size=14)
-                  pdf_table_row.cell(pickup_list[second_column_guest][2])
-                  pdf.set_font("Helvetica", "", size=12)
-                  pdf_table_row.cell(pickup_list[second_column_guest][3])
+               if (len(days_list) - current_guest) > number_of_rows_on_a_page:
+                  # only make second column if there is enough data
+                  pdf_table_row.cell("", border=0) # spacer
+                  for column_title in header:
+                     pdf_table_row.cell(column_title)
                else:
                   for _ in range(len(header)):
-                     pdf_table_row.cell("", border=0)   
-               current_guest += 1
-               if current_guest >= len(pickup_list):
-                  # print(f"\t  End of guest list reached at {current_row=}.")
-                  break
-         current_guest += number_of_rows_on_a_page # skip to next set of rows on a new page
+                     pdf_table_row.cell("", border=0)
+
+               # make dual data columns
+               for row_count in range(number_of_rows_on_a_page):
+                  pdf_table_row = table.row()
+                  # first column
+                  pdf_table_row.cell("") #bags
+                  pdf.set_font("Helvetica", "", size=14)
+                  pdf_table_row.cell(days_list[current_guest][0], align="R") #time
+                  pdf.set_font("Helvetica", "", size=12)
+                  pdf_table_row.cell(days_list[current_guest][1]) #first name
+                  pdf.set_font("Helvetica", "", size=14)
+                  pdf_table_row.cell(days_list[current_guest][2]) #last
+                  pdf.set_font("Helvetica", "", size=12)
+                  pdf_table_row.cell(days_list[current_guest][3]) #phone
+                  # second column
+                  second_column_guest = current_guest + number_of_rows_on_a_page
+                  if second_column_guest < len(days_list):
+                     # print(f"\t  {current_guest=} {days_list[current_guest]}\n\t\t {second_column_guest=} {days_list[second_column_guest]}")
+                     pdf_table_row.cell("", border=0) #center spacer
+                     pdf_table_row.cell("") #bags, align="R")
+                     pdf.set_font("Helvetica", "", size=14)
+                     pdf_table_row.cell(days_list[second_column_guest][0], align="R")
+                     pdf.set_font("Helvetica", "", size=12)
+                     pdf_table_row.cell(days_list[second_column_guest][1])
+                     pdf.set_font("Helvetica", "", size=14)
+                     pdf_table_row.cell(days_list[second_column_guest][2])
+                     pdf.set_font("Helvetica", "", size=12)
+                     pdf_table_row.cell(days_list[second_column_guest][3])
+                  else:
+                     for _ in range(len(header)):
+                        pdf_table_row.cell("", border=0)   
+                  current_guest += 1
+                  if current_guest >= len(days_list):
+                     break
+            current_guest += number_of_rows_on_a_page # skip to next set of rows on a new page
                
-      except Exception as e:
-         status_string = f"Failure: while making table for {pdf_report_path} exception: {e}"
-         print(status_string)
-         return status_string
+         except Exception as e:
+            status_string = f"Failure: while making table for {pdf_report_path} exception: {e}"
+            print(status_string)
+            return status_string
       
    try:
       pdf.output(pdf_report_path)
