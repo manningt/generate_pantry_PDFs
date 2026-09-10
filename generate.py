@@ -26,8 +26,9 @@ from defines import GUEST_LIST_IDX_E
 from get_guests_visits import load_token, get_client_lists, get_visits
 # from get_registrations import get_registrations, make_priority_landline_lists
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf, \
-   write_expeditor_2column_pdf, move_delivery_to_pickup, write_expeditor_1column_pdf, \
+   move_delivery_to_pickup, write_expeditor_1column_pdf, \
    write_delivery_routes_pdf
+from make_reports import write_expeditor_2column_pdf
 from make_csv import write_csv
 from make_delivery_tally import write_delivery_tally_csv
 from upload_folder_to_gdrive import upload_folder, get_folder_id
