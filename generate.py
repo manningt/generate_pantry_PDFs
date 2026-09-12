@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
    # if run autonomously, check that it's Thursday
    if now.weekday() != 3:
-      this_weeks_dates = ["2026-08-28", "2026-08-29"]
+      this_weeks_dates = ["2026-09-11", "2026-09-12"]
       print(f'\tWarning: using hardcoded dates: {this_weeks_dates}')
    else:
       Fridays_date = now + timedelta(days=1)
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
    write_csv(modified_guest_visit_lists, LOCAL_FOLDER_PATH, f'_{this_weeks_dates[0][-5:]}.csv', client_info_dict)
 
-   delivery_tally_csv_filename = f'Delivery_Tally-{this_weeks_dates[0][-5:]}.csv'
+   delivery_tally_csv_filename = f'Delivery_Tally_{this_weeks_dates[0][-5:]}.csv'
    write_delivery_tally_csv(modified_guest_visit_lists[GUEST_LIST_IDX_E.Delivery.value], LOCAL_FOLDER_PATH, delivery_tally_csv_filename)
 
    delivery_pdf_filename = f'Deliveries_{this_weeks_dates[0][-5:]}.pdf'
@@ -144,9 +144,20 @@ if __name__ == "__main__":
    files_to_print.append(("./cover-pages/cover-Delivery-expeditor.pdf",1))
    files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, delivery_pdf_filename),1)) #filename & copies tuple
 
-   pickup_pdf_filename = f'Pickups_{this_weeks_dates[0][-5:]}.pdf'
+   pickup_pdf_filename = f'Pickups_by_time_{this_weeks_dates[0][-5:]}.pdf'
    write_expeditor_2column_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, pickup_pdf_filename, client_info_dict, this_weeks_dates)
    files_to_print.append(("./cover-pages/cover-Pickup-expeditor.pdf",1))
+   files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, pickup_pdf_filename),1))
+
+   #sort Pick-ups by last name
+   for list_idx, guest_list in enumerate(modified_guest_visit_lists): #guest_visit_lists):
+      if list_idx == GUEST_LIST_IDX_E.Delivery.value:
+         continue 
+      else:
+         guest_list.sort(key=lambda x: (x[3], x[4]))  #sort last_name & first_name
+   pickup_pdf_filename = f'Pickups_by_name_{this_weeks_dates[0][-5:]}.pdf'
+   write_expeditor_2column_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, pickup_pdf_filename, client_info_dict, this_weeks_dates)
+   files_to_print.append(("./cover-pages/cover-Pickups_by_name.pdf",1))
    files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, pickup_pdf_filename),1))
 
    delivery_routes_pdf_filename = f'Deliveries_per_route_{this_weeks_dates[0][-5:]}.pdf'
@@ -180,6 +191,10 @@ if __name__ == "__main__":
       for line in status_strings:
          report_file.write(line + "\n")
 
+   if test_mode:
+      print(f'Test mode: skipping upload & printing of {files_to_print}')
+      exit()
+
    # report generation done, now upload to google drive
    gdrive_folder_path_list = this_weeks_dates[0].split("-")
    gdrive_folder_path_list[1] = month_name[int(gdrive_folder_path_list[1])] #get name from month number
@@ -201,8 +216,5 @@ if __name__ == "__main__":
 
    # now print
    for file_copies_tuple in files_to_print:
-      if test_mode:
-         print(f'Test mode: skipping printing of {file_copies_tuple[1]} copies of {file_copies_tuple[0]}')
-      else:
-         print(f'Printing {file_copies_tuple[1]} copies of {file_copies_tuple[0]}')
-         print_file(file_copies_tuple[0], copies=file_copies_tuple[1])
+      print(f'Printing {file_copies_tuple[1]} copies of {file_copies_tuple[0]}')
+      print_file(file_copies_tuple[0], copies=file_copies_tuple[1])
