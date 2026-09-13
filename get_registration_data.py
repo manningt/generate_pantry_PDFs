@@ -1,6 +1,15 @@
-#get_registration_data functions
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#   "requests",
+# ]
+# ///
+
+from get_guests_visits import load_token
 import time as unix_time
 import requests
+import json
 
 '''
 The following code was in generator.py to get a list of guests with landlines:
@@ -19,7 +28,6 @@ The following code was in generator.py to get a list of guests with landlines:
          print(f"{client_info_dict[client_id][3]} {client_info_dict[client_id][1]} {client_info_dict[client_id][0]}")
 '''
 
-
 '''
 currently used as a prototype for testing registration data
    inputs is the client_id_list - which is a dictionary of client_id's and client data items
@@ -33,6 +41,8 @@ currently used as a prototype for testing registration data
          done: 829 guest's registrations retrieved in 346.30 seconds; average_per_page=2.39
 '''
 def make_priority_landline_lists(token, client_info_dict):
+
+   PRINT_CLIENTS_WITHOUT_REGISTRATIONS = False
 
    clients_with_priority = {}
    clients_with_landlines = {}
@@ -68,8 +78,8 @@ def make_priority_landline_lists(token, client_info_dict):
       try:
          questions = response_list['data'][0]['registration_questions']
       except:
-         print(f"{client_id} does not have registration_questions; reponse was:")
-         print(f"\t{response_list}")
+         if PRINT_CLIENTS_WITHOUT_REGISTRATIONS:
+            print(f"{client_id} does not have registration_questions.")
          continue
       if 'Priority' in questions:
          has_priority = questions['Priority']
@@ -98,8 +108,8 @@ def make_priority_landline_lists(token, client_info_dict):
       # client_info_dict, clients_added_count = parse_client_response(response_list['data'], client_info_dict)
 
       # print(' .', end='', flush=True)
-   print(f'Priority: {len(clients_with_priority)}: {clients_with_priority}')
-   print(f'/nLandlines: {len(clients_with_landlines)}: {clients_with_landlines}')
+   # print(f'Priority: {len(clients_with_priority)}: {clients_with_priority}')
+   # print(f'/nLandlines: {len(clients_with_landlines)}: {clients_with_landlines}')
    elapsed_time = unix_time.time() - start_time
    average_time_per_page = query_count/elapsed_time
    print(f" done: {query_count} guest's registrations retrieved in {elapsed_time:.2f} seconds; average_per_page={average_time_per_page:.2f}", flush=True)
@@ -163,3 +173,61 @@ def get_registrations(token, priority_list):
       # print(f' done: {len(client_info_dict)} active guests retrieved in {elapsed_time:.2f} seconds; average_per_page={average_time_per_page:.2f}', flush=True)
 
    return
+
+def compare_json_dictionaries(current_json, new_json):
+   with open(current_json, "r") as fp:
+      current_dict = json.load(fp)
+
+   with open(new_json, "r") as fp:
+      new_dict = json.load(fp)
+
+   # print(f"{current_dict=}\n{new_dict=}")
+   # return
+
+   same_dict = True
+   for key, value in current_dict.items():
+      if key not in new_dict:
+         print(f"{key}: {value} not in {new_json}")
+         same_dict = False
+      elif value != new_dict[key]:
+         print(f"value differences for {key}: Current={value}  Updated={new_dict[key]}")
+         same_dict = False
+
+   for key, value in new_dict.items():
+      if key not in current_dict:
+         print(f"{key}: {value} added in {new_json}")
+         same_dict = False
+
+   if same_dict:
+      print("{new_json} is equal to {current_json}")
+
+
+if __name__ == "__main__":
+   CURRENT_GUESTS_WITH_PRIORITY_FILENAME = "my-priority.json"
+   UPDATED_GUESTS_WITH_PRIORITY_FILENAME = "my-priority-update.json"
+   CLIENT_LIST_FILENAME = "my-guests.json"
+   TOKEN_FILENAME = "my-pantrysoft_token.json"
+
+   try:
+      pantrysoft_token = load_token(TOKEN_FILENAME)
+   except:
+      print(f"Quitting: failed to load {TOKEN_FILENAME}.")
+      exit()
+
+   try:
+      with open(CLIENT_LIST_FILENAME, "r") as fp:
+         client_info_dict = json.load(fp)
+      print(f'Using saved guest/client file {CLIENT_LIST_FILENAME} which has {len(client_info_dict)} guests', flush=True)
+   except:
+      print(f"Quitting: failed to load {CLIENT_LIST_FILENAME}")
+      exit()
+
+   clients_with_priority, clients_with_landlines = make_priority_landline_lists(pantrysoft_token, client_info_dict)
+   try:
+      with open(UPDATED_GUESTS_WITH_PRIORITY_FILENAME, "w") as fp:
+         json.dump(clients_with_priority , fp)
+   except:
+      print(f"Failed to write {UPDATED_GUESTS_WITH_PRIORITY_FILENAME}")
+      exit()
+
+   compare_json_dictionaries(CURRENT_GUESTS_WITH_PRIORITY_FILENAME, UPDATED_GUESTS_WITH_PRIORITY_FILENAME)
