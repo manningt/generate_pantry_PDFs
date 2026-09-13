@@ -24,7 +24,6 @@ from googleapiclient.http import MediaFileUpload # pyrefly: ignore [missing-impo
 
 from defines import GUEST_LIST_IDX_E
 from get_guests_visits import load_token, get_client_lists, get_visits
-# from get_registrations import get_registrations, make_priority_landline_lists
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf, \
    move_delivery_to_pickup, write_expeditor_1column_pdf, \
    write_delivery_routes_pdf
