@@ -1,10 +1,10 @@
 # Introduction
 At the close of accepting orders from guests, currently at 12:15 on Thursdays, the following reports need to be generated:
 - Pickup expeditor: a table with columns: Bags, Pickup Time, First & Last Names, and phone numbers:
-    - The bags column is blank, it is used to in the fulfillment process to check that orders have been taken by a shopper, completed and something else.
+    - The bags column is blank, it is used in the fulfillment process to check that orders have been taken by a shopper, completed and something else.
     - The rows are sorted by Pickup time, last name, first name
     - the guest's phone number is included in case they do not show up at the pickup time.
-    - The file naming convention is: Pickups_by_time_MM-DD where DD is the Friday of the week.  These reports are maintain in a folder indicating the year.
+    - The file naming convention is: Pickups_by_time_MM-DD where DD is the Friday of the week.  These reports are maintained in a folder indicating the year.
     - Saturday pickups are on a seperate page.
 - Pickups sorted by name
     - same columns the Pickup expeditor, but sorted by last name, first name.
@@ -13,7 +13,13 @@ At the close of accepting orders from guests, currently at 12:15 on Thursdays, t
     - Like the Pickup Expeditor, the bags column is blank
     - The rows are sorted by Delivery Route, last name, first name
     - Some orders on a delivery-route can be picked up instead of delivered.  Currently orders on the Quaker delivery route are picked up at 3:45.  These orders are moved from the delivery expeditor files to the pickup expeditor flags - but not the bag tag printing files.  When moved to the Pickup list, the delivery route is used instead of their first name.
-    - A few guests have priority - their orders are shopped first for that delivery route.  This is indicated by an asterick preceeding their last name, so they get sorted to be before the other guests.
+    - A few guests have priority - their orders are shopped first for that delivery route.  This is indicated by an asterisk preceding their last name, so they get sorted to be before the other guests.
+- Delivieries_per_route PDF:
+    - A table of guests per route per page (or multiple pages).
+    - The table columns are Bags, First, Last Name, Street, Unit, Phone
+    - current routes printed are: Sullivan, James Steel Mill (JSM), YWCA Salisbury Square, and Heritage House
+- Delivery_Tally.csv
+    - A table where the first column is the delivery route name and the 2nd column is the number of deliveries for that route.
 - Pickup & Delivery CSV files used for tracking bags per guest.  The columns are Bags[used], Bags[calculated], Labels, Items, First, Last, Route/Pickup Time.
     - After orders have been filled, the first column is edited with the actual number of bags used.  Analysis of these files is done at a later time to refine the number of bags required per number of items.
     - The Labels column contains the number of bags required for the number of items in the order.  The item to bag calculation is done by the program.
@@ -21,9 +27,8 @@ At the close of accepting orders from guests, currently at 12:15 on Thursdays, t
 - Tag/Label PDFs
     - 4 PDFs are generated: 1 Delivery and 3 Pickups (Friday_before_3, Friday_after_3, and Saturday).
     - The delivery labels have the route at the top, followed by the guest's first and last name, and a page count, e.g. 3 of 6.  The labels are printed in order of delivery route, last name.
-    - The pickup labels on have the first, last names and the page count, and are ordered by Last name, First name, rather than pickup time.
-    - The pickup labels are printed in the order of Last Name, First Name
-    - A thermal printer is used to print the 2x4 labels - this printing is done manually after downloading the 4 PDFs from the food pantry's Google Team drive.
+    - The pickup labels have the first, last names and the page count, and are ordered by Last name, First name, rather than pickup time.
+     - A thermal printer is used to print the 2x4 labels - this printing is done manually after downloading the 4 PDFs from the food pantry's Google Team drive.
 - list-of-guests-in-tag-pdf-files
     - A single file with a table of first and last names, pickup time or route, and number of items.  There are separate pages for Delivery, before 3, after 3 and Saturday.
 
