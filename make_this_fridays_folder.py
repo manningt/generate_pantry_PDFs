@@ -19,7 +19,7 @@ this_coming_friday_list[1] = month_name[int(this_coming_friday_list[1])] #get na
 
 PANTRYSOFT_ORDER_DOCUMENTS_FOLDER_ID = '1qusUE0OHeK7-i-Tu647dsQJ7nC12uVVz'
 this_weeks_folder_id, this_weeks_folder_path, created_folder_list = \
-   get_folder_id(PANTRYSOFT_ORDER_DOCUMENTS_FOLDER_ID, this_coming_friday_list)
+   get_folder_id(PANTRYSOFT_ORDER_DOCUMENTS_FOLDER_ID, this_coming_friday_list, create_if_not_present=True)
 # print(f"{this_weeks_folder_id=} {this_weeks_folder_path=}")
 if this_weeks_folder_id:
    if len(created_folder_list):
