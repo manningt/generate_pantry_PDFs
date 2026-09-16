@@ -111,6 +111,11 @@ def upload_folder(local_folder_path, shared_folder_id, created_folder_name = Non
 
 
 def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=False):
+    try:
+        service = authenticate_drive()
+    except:
+        print("Failed Google Authentication")
+        return None, None, None
     # date_list = ["2027", "February", "05"]
     folder_path = ""
     created_folder_list = []
@@ -118,7 +123,7 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
         folder_id = top_level_shared_folder    
         for i in range(3):
             # print(f"\n{i=}: list_folder_contents for {folder_id=}")
-            items = list_folder_contents(folder_id)
+            items = list_folder_contents(service, folder_id)
             higher_level_folder_id = folder_id
             folder_id = None
             for item in items:
@@ -142,7 +147,6 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
 
             if not folder_id:
                 if create_if_not_present:
-                    service = authenticate_drive()
                     if i < 2:
                         folder_name_to_create = date_list[i]
                     else:
@@ -169,11 +173,9 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
     return folder_id, folder_path, created_folder_list
 
 
-def list_folder_contents(folder_id: str):
+def list_folder_contents(service, folder_id: str):
     items = []
     try:
-        service = authenticate_drive()
-
         # Query filter:
         # 1. 'folder_id' in parents -> directly inside the specified folder
         # 2. trashed = false        -> exclude items in the bin/trash
