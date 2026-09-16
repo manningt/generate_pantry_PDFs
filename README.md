@@ -62,7 +62,24 @@ The program does the following:
 7. upload the generated files to Google Drive: /Newbury Food Pantry/PANTRYSOFT ORDER DOCUMENTS/20xx/Tags where 20xx is the year, starting with 2026
 8. Print the letter sized PDFs on the Pantry printer.
 
-# make_this_fridays_folder program
+## upload_folder_to_gdrive
+Functions in this module:
+  - authenticate_drive(): copied from google example
+  - get_folder_id(top_level_shared_folder, date_list, create_if_not_present=False):
+    - called by make_this_fridays_folder() with a list of YEAR, MONTH, DD
+    - also called by upload_folder() in order to get the folder ID for this week's PDFs, CSVs
+    - authenticates
+    - calls list_folder_contents to walk the date list to verify the folders exist
+    - calls create_drive_folder if the folder does not exist (and create_if_not_present is True, which is only when making this Friday's folder)
+  - create_drive_folder(service, folder_name, parent_id):
+  - list_folder_contents(service, folder_id: str):
+  - upload_folder(local_folder_path, shared_folder_id, created_folder_name = None):
+    - called by generate.py to upload the generated PDFs and CSVs
+    - authenticates
+    - calls upload_file_to_drive for each file
+  - upload_file_to_drive(service, local_file_path, parent_id):
+
+## make_this_fridays_folder program
 This program is run every Monday to create the folder YYYY/MONTH/MON-DD, if it doesn't exist.  MONTH is the full name.  MON is the 3 letter abbreviation, except for September, which is 4 characters.  The folder needs to be created before Tuesday, because the caller supervisor uploads a spreadsheet named *Master List for Calling  Month Day Year*.  On Thursdays, the *generate.py* script uploads to this Friday's folder.
 
 The program is launched as a cron job; it's output is written to /tmp/make_fridays_folder.log
