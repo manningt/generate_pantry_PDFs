@@ -117,11 +117,15 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
         print("Failed Google Authentication")
         return None, None, None
     # date_list = ["2027", "February", "05"]
+    folder_id = None
     folder_path = ""
     created_folder_list = []
-    if len(date_list) == 3:
+
+    if len(date_list) != 3:
+        print(f"Bad date list: {date_list}")
+    else:
         folder_id = top_level_shared_folder    
-        for i in range(3):
+        for i in range(len(date_list)):
             # print(f"\n{i=}: list_folder_contents for {folder_id=}")
             items = list_folder_contents(service, folder_id)
             higher_level_folder_id = folder_id
@@ -135,12 +139,15 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
                     else:
                         #separate month and day: month will be [0], day will be [1]
                         parsed_folder_name = item['name'].replace('-', ' ').replace('_', ' ').split(" ")
-                        # compare 3 characters of month with folder name and integer of day
-                        month_abbrev = date_list[1][:3]
-                        # print(f"{month_abbrev=}")
-                        if parsed_folder_name[0].startswith(month_abbrev) and int(parsed_folder_name[1]) == int(date_list[2]):
-                            folder_id = item['id']
-                            folder_path += f"{item['name']}/"
+                        if len(parsed_folder_name) != 2:
+                            print(f"parsing month-day={item['name']} failed")
+                        else:
+                            # compare 3 characters of month with folder name and integer of day
+                            month_abbrev = date_list[1][:3]
+                            # print(f"{month_abbrev=}")
+                            if parsed_folder_name[0].startswith(month_abbrev) and int(parsed_folder_name[1]) == int(date_list[2]):
+                                folder_id = item['id']
+                                folder_path += f"{item['name']}/"
                 if folder_id:
                     # print(f"found folder: {item['name']} (ID: {item['id']})")
                     break
@@ -166,9 +173,6 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
                 else:
                     print(f"Did not find folder for {date_list[i]} when searching for date: {date_list}")
                     break
-    else:
-        print(f"Bad date list: {date_list}")
-        folder_id = None
 
     return folder_id, folder_path, created_folder_list
 
@@ -238,7 +242,7 @@ if __name__ == '__main__':
     PANTRYSOFT_ORDER_DOCUMENTS_FOLDER_ID = '1qusUE0OHeK7-i-Tu647dsQJ7nC12uVVz' # Newbury Food Pantry > PANTRYSOFT ORDER DOCUMENTS
 
 
-    TEST_CREATE_DATE_FOLDER = True
+    TEST_CREATE_DATE_FOLDER = False
     if TEST_CREATE_DATE_FOLDER:
         date_list = ["2027", "September", "24"]
         this_weeks_folder_id, folder_path, created_folder_list = \
@@ -275,12 +279,12 @@ if __name__ == '__main__':
                 print(f"{item_type} {item['name']} (ID: {item['id']})")
 
 
-    TEST_UPLOAD_TO_NEW_FOLDER = False
+    TEST_UPLOAD_TO_NEW_FOLDER = True
     if TEST_UPLOAD_TO_NEW_FOLDER:
         SHARED_FOLDER_ID = '1EI9SuqrfZw2rwTKc0Wqw-Ks9uUxDc4P2'  #folder ID from Drive URL: Newbury Food Pantry > PANTRYSOFT ORDER DOCUMENTS > 2026 > Tags
         NEW_FOLDER_NAME = 'example'
         LOCAL_FOLDER_PATH = './output_files'  # Path to local folder to upload
-        upload_folder(SHARED_FOLDER_ID, NEW_FOLDER_NAME, LOCAL_FOLDER_PATH)
+        upload_folder(LOCAL_FOLDER_PATH, SHARED_FOLDER_ID, created_folder_name = True)
 
 
     #SHARED_FOLDER_ID = '1fe1J4Un0bw3vqtge0tvBu9Nx4JcXT4nu'  # Newbury Food Pantry > PANTRYSOFT ORDER DOCUMENTS > 2026
