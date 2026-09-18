@@ -284,7 +284,7 @@ if __name__ == '__main__':
         SHARED_FOLDER_ID = '1EI9SuqrfZw2rwTKc0Wqw-Ks9uUxDc4P2'  #folder ID from Drive URL: Newbury Food Pantry > PANTRYSOFT ORDER DOCUMENTS > 2026 > Tags
         NEW_FOLDER_NAME = 'example'
         LOCAL_FOLDER_PATH = './output_files'  # Path to local folder to upload
-        upload_folder(LOCAL_FOLDER_PATH, SHARED_FOLDER_ID, created_folder_name = True)
+        upload_folder(LOCAL_FOLDER_PATH, SHARED_FOLDER_ID, created_folder_name = NEW_FOLDER_NAME)
 
 
     #SHARED_FOLDER_ID = '1fe1J4Un0bw3vqtge0tvBu9Nx4JcXT4nu'  # Newbury Food Pantry > PANTRYSOFT ORDER DOCUMENTS > 2026
