@@ -27,7 +27,7 @@ from get_guests_visits import load_token, get_client_lists, get_visits
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf, \
    move_delivery_to_pickup, write_expeditor_1column_pdf, \
    write_delivery_routes_pdf
-from make_reports import write_expeditor_2column_pdf
+from make_reports import write_expeditor_2column_pdf, write_expeditor_2column_pdf2
 from make_csv import write_csv
 from make_delivery_tally import write_delivery_tally_csv
 from upload_folder_to_gdrive import upload_folder, get_folder_id
@@ -140,6 +140,8 @@ if __name__ == "__main__":
 
    delivery_pdf_filename = f'Deliveries_{this_weeks_dates[0][-5:]}.pdf'
    write_expeditor_1column_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, delivery_pdf_filename, client_info_dict, this_weeks_dates)
+   # test 2 column report:
+   # write_expeditor_2column_pdf2(modified_guest_visit_lists, LOCAL_FOLDER_PATH, delivery_pdf_filename, client_info_dict, this_weeks_dates)
    files_to_print.append(("./cover-pages/cover-Delivery-expeditor.pdf",1))
    files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, delivery_pdf_filename),1)) #filename & copies tuple
 
