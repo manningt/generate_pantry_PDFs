@@ -1,7 +1,7 @@
 # make_reports.py
 from defines import SATURDAY_IDX
 import os
-from fpdf import FPDF
+from fpdf import FPDF, table
 from defines import GUEST_LIST_IDX_E, FRIDAY_IDX, SATURDAY_IDX
 
 def normalize_phone_number(number):
@@ -272,4 +272,88 @@ def write_expeditor_2column_pdf2(guest_list_list, output_directory, expeditor_pd
    route_list = sorted(route_set)
    with open('output_files/route_list.txt', mode='wt', encoding='utf-8') as myfile:
       myfile.write('\n'.join(route_list))
+   return True
+
+def write_report_pdf(guest_list, report_title, output_directory, pdf_report_filename, table_def):
+   if len(guest_list) == 0:
+      print("Failure: no guest lists in request to generate PDF report on tag files.")
+      return False
+   
+   pdf_report_path = os.path.join(output_directory, pdf_report_filename)
+   try:
+      pdf = FPDF(orientation="portrait", unit="pt", format="letter")
+   except Exception as e:
+      print(f"Failure: could not create PDF for {pdf_report_path} exception: {e}")
+      return False
+
+   #72 points = 1 inch;
+   pdf.set_margins(12, 24, 12) #left, top, right in points
+   widths = table_def.column_widths
+   if table_def.number_of_columns == 1:
+      pass
+   elif table_def.number_of_columns == 2:
+      if len(guest_list) > table_def.number_of_rows_on_a_page:
+         widths.append(table_def.center_spacer_width)
+         widths.extend(table_def.column_widths)
+   else:
+      print(f"Unsupported number of columns: {table_def.number_of_columns}; either 1 or 2")
+      return
+   
+   # print(f"{sum(widths)=} {widths=}")
+   print(f"\nGenerating {pdf_report_path}: {len(guest_list)} guest lists. {report_title=}")
+   current_row = 0
+   guest_list_page_number = 0
+   page_count = (len(guest_list) // (table_def.number_of_rows_on_a_page * 2)) + 1
+   try:
+      while current_row < len(guest_list):
+         pdf.add_page()
+         guest_list_page_number += 1
+         pdf.set_font("Helvetica", "B", size=14)
+         pdf.cell(0,0, f'{report_title}      Page {guest_list_page_number} of {page_count}', align="L")
+         pdf.ln(pdf.font_size+4)
+         pdf.set_font("Helvetica", "B", size=12)
+         with pdf.table(align="L", line_height=pdf.font_size, padding=2, width=sum(widths), col_widths=widths) as table:
+            pdf_table_row = table.row()
+            for column_title in table_def.header:
+               pdf_table_row.cell(column_title)
+            if table_def.number_of_columns == 2 and len(guest_list) > table_def.number_of_rows_on_a_page:
+               # print("Adding 2nd column")
+               pdf_table_row.cell("", border=0) # spacer
+               for column_title in table_def.header:
+                  pdf_table_row.cell(column_title)
+            pdf.set_font("Helvetica")
+            # make dual data columns
+            for _ in range(table_def.number_of_rows_on_a_page):
+               pdf_table_row = table.row()
+               this_guest = guest_list[current_row].copy()
+               del this_guest[0] # delete client_id
+               for idx, item in enumerate(this_guest):
+                  pdf.set_font("Helvetica",  size=int(table_def.column_font[idx]))
+                  pdf_table_row.cell(str(item))
+
+               second_column_guest_index = current_row + table_def.number_of_rows_on_a_page
+               if table_def.number_of_columns == 2 and second_column_guest_index <= len(guest_list):
+                  pdf_table_row.cell("", border=0) # center row
+                  this_guest = guest_list[second_column_guest_index].copy()
+                  del this_guest[0] # delete client_id
+                  for idx, item in enumerate(this_guest):
+                     pdf.set_font("Helvetica",  size=int(table_def.column_font[idx]))
+                     pdf_table_row.cell(str(item))
+               current_row += 1
+               if current_row >= len(guest_list):
+                  print(f"\t  End of guest list reached at {current_row=}.")
+                  break
+         current_row += table_def.number_of_rows_on_a_page # skip to next set of rows
+            
+   except Exception as e:
+      status_string = f"Failure: while making table for {pdf_report_path} exception: {e}"
+      return status_string
+      
+   try:
+      pdf.output(pdf_report_path)
+      # status_string = f"{pdf_report_path} has {len(guest_list)} guests."
+   except Exception as e:
+      print(f"failed to generate {pdf_report_path} exception: {e}")
+      return False
+
    return True
