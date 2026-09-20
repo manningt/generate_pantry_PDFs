@@ -286,24 +286,29 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
       print(f"Failure: could not create PDF for {pdf_report_path} exception: {e}")
       return False
 
-   #72 points = 1 inch;
-   pdf.set_margins(12, 24, 12) #left, top, right in points
+   #72 points = 1 inch;  612 points across page
+   pdf.set_margins(40, 24, 2) #left, top, right in points - 40 pix = .5"
    widths = table_def.column_widths
    if table_def.number_of_columns == 1:
-      pass
+      widths = table_def.column_widths
    elif table_def.number_of_columns == 2:
       if len(guest_list) > table_def.number_of_rows_on_a_page:
-         widths.append(table_def.center_spacer_width)
-         widths.extend(table_def.column_widths)
+         widths = table_def.column_widths + [table_def.center_spacer_width] + table_def.column_widths
    else:
       print(f"Unsupported number of columns: {table_def.number_of_columns}; either 1 or 2")
       return
    
    # print(f"{sum(widths)=} {widths=}")
-   print(f"\nGenerating {pdf_report_path}: {len(guest_list)} guest lists. {report_title=}")
+   print(f"Generating {pdf_report_path} {report_title=}: ", end="")
    current_row = 0
    guest_list_page_number = 0
-   page_count = (len(guest_list) // (table_def.number_of_rows_on_a_page * 2)) + 1
+
+   if table_def.number_of_columns == 2:
+      page_count = (len(guest_list) // (table_def.number_of_rows_on_a_page * 2)) + 1
+   else:
+      page_count = (len(guest_list) // table_def.number_of_rows_on_a_page) + 1
+
+   skipped_second_column = 0
    try:
       while current_row < len(guest_list):
          pdf.add_page()
@@ -321,34 +326,49 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
                pdf_table_row.cell("", border=0) # spacer
                for column_title in table_def.header:
                   pdf_table_row.cell(column_title)
-            pdf.set_font("Helvetica")
             # make dual data columns
             for _ in range(table_def.number_of_rows_on_a_page):
                pdf_table_row = table.row()
                this_guest = guest_list[current_row].copy()
                del this_guest[0] # delete client_id
+               # print(f"{this_guest}", end="")
                for idx, item in enumerate(this_guest):
                   pdf.set_font("Helvetica",  size=int(table_def.column_font[idx]))
                   pdf_table_row.cell(str(item))
 
                second_column_guest_index = current_row + table_def.number_of_rows_on_a_page
-               if table_def.number_of_columns == 2 and second_column_guest_index <= len(guest_list):
-                  pdf_table_row.cell("", border=0) # center row
-                  this_guest = guest_list[second_column_guest_index].copy()
-                  del this_guest[0] # delete client_id
-                  for idx, item in enumerate(this_guest):
-                     pdf.set_font("Helvetica",  size=int(table_def.column_font[idx]))
-                     pdf_table_row.cell(str(item))
+               # print(f"{second_column_guest_index=} {len(guest_list)}")
+               if table_def.number_of_columns == 2:
+                  if second_column_guest_index < len(guest_list):
+                     pdf_table_row.cell("", border=0) # center row
+                     this_guest = guest_list[second_column_guest_index].copy()
+                     del this_guest[0] # delete client_id
+                     # print(f"{this_guest} ", end="")
+                     for idx, item in enumerate(this_guest):
+                        pdf.set_font("Helvetica",  size=int(table_def.column_font[idx]))
+                        pdf_table_row.cell(str(item))
+                  else:
+                     skipped_second_column += 1
                current_row += 1
                if current_row >= len(guest_list):
-                  print(f"\t  End of guest list reached at {current_row=}.")
+                  # print(f"\t  End of guest list reached at {current_row=}.")
                   break
-         current_row += table_def.number_of_rows_on_a_page # skip to next set of rows
+         if table_def.number_of_columns == 2:
+            current_row += table_def.number_of_rows_on_a_page # skip to next set of rows
             
    except Exception as e:
       status_string = f"Failure: while making table for {pdf_report_path} exception: {e}"
       return status_string
-      
+   
+   if table_def.number_of_columns == 2:
+      if current_row % table_def.number_of_rows_on_a_page:
+         guest_count = current_row - table_def.number_of_rows_on_a_page
+      else:
+         guest_count = current_row - skipped_second_column
+   else:
+      guest_count = current_row
+   print(f"{guest_list_page_number} pages; {guest_count} guests")
+
    try:
       pdf.output(pdf_report_path)
       # status_string = f"{pdf_report_path} has {len(guest_list)} guests."
