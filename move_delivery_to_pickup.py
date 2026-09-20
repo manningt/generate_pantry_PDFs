@@ -31,7 +31,7 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
          print(f"Visit error: {client_id} missing for {visit_tuple=}")
          continue
       first_name = client_info[client_id][0]
-      last_name = client_info[client_id][1][:20]
+      last_name = visit_tuple[4] # has asterisk in last name for priority
       phone = normalize_phone_number(client_info[client_id][3])
       item_count = visit_tuple[1]
       bags = item_count_to_label_count(item_count)
@@ -48,9 +48,10 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
             break
          else:
             route = visit_tuple[3].replace(" - ",": ").replace("- ",": ")[:25]
-            delivery_with_item_list.append([visit_tuple[0], route, first_name, last_name, item_count])
+            delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
             delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
 
+   delivery_with_item_list.sort(key=lambda x: (x[3], x[2], x[1]))  #sort by delivery_route, last_name 
    delivery_with_bags_list.sort(key=lambda x: (x[3], x[5]))  #sort by delivery_route, last_name 
 
    return pickup_with_item_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list
