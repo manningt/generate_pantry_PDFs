@@ -18,9 +18,9 @@ class Table_def_pickup_by_name:
    number_of_columns = 2
    number_of_rows_on_a_page = 40
    header = ["First", "Last", "Time", "Items"]
-   column_widths = [64, 90, 54, 36]
+   column_widths = [64, 90, 38, 36]
    column_font = [12, 12, 12, 12]
-   center_spacer_width = 50
+   center_spacer_width = 40
 
 class Table_def_delivery_expeditor:
    number_of_columns = 1
