@@ -22,6 +22,14 @@ class Table_def_pickup_by_name:
    column_font = [12, 12, 12, 12]
    center_spacer_width = 40
 
+class Table_def_pickup_by_time:
+   number_of_columns = 1
+   number_of_rows_on_a_page = 39
+   header = ["Bag", "Bags","Time", "First", "Last", "Items", "Phone"]
+   column_widths = [30, 34, 40, 80, 132, 36, 90]
+   column_font = [14, 14, 14, 14, 14, 14, 14]
+   center_spacer_width = 0 # unused
+
 class Table_def_delivery_expeditor:
    number_of_columns = 1
    number_of_rows_on_a_page = 39
