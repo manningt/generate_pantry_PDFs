@@ -300,7 +300,7 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
       return
    
    # print(f"{sum(widths)=} {widths=}")
-   print(f"Generating {pdf_report_path} {report_title=}: ", end="")
+   print(f"Generating {pdf_report_filename} {report_title=}: ", end="")
    current_row = 0
    guest_list_page_number = 0
 
