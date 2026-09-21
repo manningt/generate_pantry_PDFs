@@ -45,3 +45,12 @@ class Table_def_delivery_2column:
    column_widths = [64, 90, 54, 36]
    column_font = [12, 12, 12, 12]
    center_spacer_width = 40
+
+class Table_def_deliveries_by_route:
+   number_of_columns = 1
+   number_of_rows_on_a_page = 39
+   header = ["Bags", "First", "Last", "Street", "Unit","Phone"]
+   column_widths = [34, 84, 84, 150, 80, 90]
+   column_font = [14, 14, 14, 14, 14, 14]
+   center_spacer_width = 0 # unused
+
