@@ -26,4 +26,4 @@ def write_delivery_tally_csv(guest_list, output_directory, csv_filename):
       writer = csv.writer(csvfile)
       writer.writerows(routes_list)
 
-   print(f'Done creating {csv_filename}; total deliveries = {total_deliveries_count}')
+   print(f'{csv_filename} has {total_deliveries_count} guests')
