@@ -6,9 +6,10 @@ def write_delivery_tally_csv(guest_list, output_directory, csv_filename):
 
    routes_dict = {}
    total_deliveries_count = 0
+
+   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
    for visit_tuple in guest_list:
-      visit_route = visit_tuple[3].replace("- ", ": ").replace(" :", ":")
-      visit_route = visit_route.replace(",", "-") #remove commas in routes to avoid putting name in quotes when writing CSV
+      visit_route = visit_tuple[3]
       if visit_route not in routes_dict:
          routes_dict[visit_route] = 1
       else:
