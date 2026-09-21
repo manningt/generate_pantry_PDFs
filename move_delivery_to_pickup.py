@@ -50,7 +50,7 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
                   pickup_by_time_list.append(moved_visit_with_bags)
                   break
                else:
-                  route = visit_tuple[3].replace(" - ",": ").replace("- ",": ")[:25]
+                  route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:25]
                   delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
                   delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
          else:
