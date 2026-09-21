@@ -6,7 +6,8 @@
 #   "fpdf2", 
 #   "google-api-python-client",
 #   "google-auth-httplib2",
-#   "google-auth-oauthlib"
+#   "google-auth-oauthlib",
+#   "PyPDF2"
 # ]
 # ///
 
@@ -22,13 +23,13 @@ from google_auth_oauthlib.flow import InstalledAppFlow # pyrefly: ignore [missin
 from googleapiclient.discovery import build # pyrefly: ignore [missing-import]
 from googleapiclient.http import MediaFileUpload # pyrefly: ignore [missing-import]
 
-from defines import GUEST_LIST_IDX_E
+from defines import GUEST_LIST_IDX_E, \
+   Table_def_delivery_expeditor, Table_def_delivery_2column, Table_def_pickup_by_name, Table_def_pickup_by_time
 from get_guests_visits import load_token, get_client_lists, get_visits
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf, \
-   move_delivery_to_pickup, write_expeditor_1column_pdf, \
-   write_delivery_routes_pdf
-from make_reports import write_expeditor_2column_pdf, write_expeditor_2column_pdf2
-from make_csv import write_csv
+   move_delivery_to_pickup
+from make_reports import write_report_pdf, write_counts_csv, write_delivery_routes_pdf
+from move_delivery_to_pickup import move_delivery_to_pickup
 from make_delivery_tally import write_delivery_tally_csv
 from upload_folder_to_gdrive import upload_folder, get_folder_id
 
@@ -60,7 +61,7 @@ if __name__ == "__main__":
 
    # if run autonomously, check that it's Thursday
    if now.weekday() != 3:
-      this_weeks_dates = ["2026-09-11", "2026-09-12"]
+      this_weeks_dates = ["2026-09-25", "2026-09-26"]
       print(f'\tWarning: using hardcoded dates: {this_weeks_dates}')
    else:
       Fridays_date = now + timedelta(days=1)
@@ -124,73 +125,75 @@ if __name__ == "__main__":
          guest_visit_lists = json.load(fp)
       print(f'Using saved visits file {TEMPORARY_GUEST_VISIT_LIST_FILENAME}', flush=True)
 
-   # some deliveries are picked-up at a certain time, so move them from deliveries to pickup:
-   modified_guest_visit_lists = move_delivery_to_pickup(guest_visit_lists,[('Quak','03:45')])
-   #sort:
-   for list_idx, guest_list in enumerate(modified_guest_visit_lists): #guest_visit_lists):
-      if list_idx == GUEST_LIST_IDX_E.Delivery.value:
-         guest_list.sort(key=lambda x: (x[3], x[4]))  #sort by delivery_route, last_name 
-      else:
-         guest_list.sort(key=lambda x: (x[2], x[3]))  #sort by time and last_name for the pickup report
+   status_strings = []
+   if True:
+      for list_idx, guest_list in enumerate(guest_visit_lists):
+         guest_list.sort(key=lambda x: (x[3], x[4]))  #sort by delivery_route, last_name -or- last_name or first_name
+         if list_idx == GUEST_LIST_IDX_E.Delivery.value:
+            type = 'Delivery'
+         else:
+            type = 'Pickup'
 
-   write_csv(modified_guest_visit_lists, LOCAL_FOLDER_PATH, f'_{this_weeks_dates[0][-5:]}.csv', client_info_dict)
+         pdf_filename = f'Tags-for-{GUEST_LIST_IDX_E(list_idx).name}.pdf'
+         status_string = make_label_pdfs(guest_list, type, pdf_filename, LOCAL_FOLDER_PATH, client_info_dict)
+         print(status_string)
+         status_strings.append(status_string)
+
+      TAG_PDF_REPORT_FILENAME = 'segregated-list-of-guests-in-tag-pdf-files.pdf'
+      write_tag_report_pdf(guest_visit_lists, status_strings, LOCAL_FOLDER_PATH, TAG_PDF_REPORT_FILENAME, client_info_dict)
+
+      # not printing this the tags report
+      # files_to_print.append(("./cover-pages/cover-Tags-summary.pdf",1))
+      # files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, TAG_PDF_REPORT_FILENAME),1))
+
+      text_report_path = os.path.join(LOCAL_FOLDER_PATH, "make_tags_report.txt")
+      with open(text_report_path, "w") as report_file:
+         for line in status_strings:
+            report_file.write(line + "\n")
+
+   move_delivery_to_time_slot_tuple_list = [('Quak','03:45')]
+   pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list = \
+      move_delivery_to_pickup(guest_visit_lists, move_delivery_to_time_slot_tuple_list, client_info_dict)
+
+   filename_base = "Deliveries"
+   filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
+   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
+   write_report_pdf(delivery_with_bags_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_expeditor())
+   files_to_print.append("./cover-pages/cover-Deliveries.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
+   write_counts_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.csv")
 
    delivery_tally_csv_filename = f'Delivery_Tally_{this_weeks_dates[0][-5:]}.csv'
-   write_delivery_tally_csv(modified_guest_visit_lists[GUEST_LIST_IDX_E.Delivery.value], LOCAL_FOLDER_PATH, delivery_tally_csv_filename)
+   write_delivery_tally_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, delivery_tally_csv_filename)
 
-   delivery_pdf_filename = f'Deliveries_{this_weeks_dates[0][-5:]}.pdf'
-   write_expeditor_1column_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, delivery_pdf_filename, client_info_dict, this_weeks_dates)
-   # test 2 column report:
-   # write_expeditor_2column_pdf2(modified_guest_visit_lists, LOCAL_FOLDER_PATH, delivery_pdf_filename, client_info_dict, this_weeks_dates)
-   files_to_print.append(("./cover-pages/cover-Delivery-expeditor.pdf",1))
-   files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, delivery_pdf_filename),1)) #filename & copies tuple
+   filename_wo_extension = f'{filename_base}_2column_{this_weeks_dates[0][-5:]}'
+   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
+   write_report_pdf(delivery_with_item_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_2column())
+   files_to_print.append("./cover-pages/cover-Deliveries-2-column.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
 
-   pickup_pdf_filename = f'Pickups_by_time_{this_weeks_dates[0][-5:]}.pdf'
-   write_expeditor_2column_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, pickup_pdf_filename, client_info_dict, this_weeks_dates)
-   files_to_print.append(("./cover-pages/cover-Pickup-expeditor.pdf",1))
-   files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, pickup_pdf_filename),1))
+   filename_base = "Pickups_by_name"
+   filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
+   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]} & {this_weeks_dates[1][-2:]}'
+   write_report_pdf(pickup_by_name_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
+   files_to_print.append("./cover-pages/cover-Pickups-by-name.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
 
-   #sort Pick-ups by last name
-   for list_idx, guest_list in enumerate(modified_guest_visit_lists): #guest_visit_lists):
-      if list_idx == GUEST_LIST_IDX_E.Delivery.value:
-         continue 
-      else:
-         guest_list.sort(key=lambda x: (x[3], x[4]))  #sort last_name & first_name
-   pickup_pdf_filename = f'Pickups_by_name_{this_weeks_dates[0][-5:]}.pdf'
-   write_expeditor_2column_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, pickup_pdf_filename, client_info_dict, this_weeks_dates)
-   files_to_print.append(("./cover-pages/cover-Pickups_by_name.pdf",1))
-   files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, pickup_pdf_filename),1))
+   filename_base = "Pickups_by_time"
+   filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
+   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]} & {this_weeks_dates[1][-2:]}'
+   write_report_pdf(pickup_by_time_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_time())
+   files_to_print.append("./cover-pages/cover-Pickups-by-time.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
+   write_counts_csv(pickup_by_time_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.csv")
 
-   delivery_routes_pdf_filename = f'Deliveries_per_route_{this_weeks_dates[0][-5:]}.pdf'
+   pdf_filename = f'Deliveries_per_route_{this_weeks_dates[0][-5:]}.pdf'
    # the following list is case sensitive, e.g. 07A should be 07a
    delivery_routes_to_print = ["01", "04", "08", "09", "20"]
-   write_delivery_routes_pdf(modified_guest_visit_lists, LOCAL_FOLDER_PATH, delivery_routes_pdf_filename, \
-      client_info_dict, this_weeks_dates, delivery_routes_to_print)
-   files_to_print.append(("./cover-pages/cover-Deliveries-per-route.pdf",1))
-   files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, delivery_routes_pdf_filename),1))
-
-   status_strings = []
-   for list_idx, guest_list in enumerate(guest_visit_lists):
-      guest_list.sort(key=lambda x: (x[3], x[4]))  #sort by delivery_route, last_name -or- last_name or first_name
-      if list_idx == GUEST_LIST_IDX_E.Delivery.value:
-         type = 'Delivery'
-      else:
-         type = 'Pickup'
-
-      pdf_filename = f'tags-for-{GUEST_LIST_IDX_E(list_idx).name}.pdf'
-      status_string = make_label_pdfs(guest_list, type, pdf_filename, LOCAL_FOLDER_PATH, client_info_dict)
-      print(status_string)
-      status_strings.append(status_string)
-
-   TAG_PDF_REPORT_FILENAME = 'list-of-guests-in-tag-pdf-files.pdf'
-   write_tag_report_pdf(guest_visit_lists, status_strings, LOCAL_FOLDER_PATH, TAG_PDF_REPORT_FILENAME, client_info_dict)
-   files_to_print.append(("./cover-pages/cover-Tags-summary.pdf",1))
-   files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, TAG_PDF_REPORT_FILENAME),1))
-
-   text_report_path = os.path.join(LOCAL_FOLDER_PATH, "make_tags_report.txt")
-   with open(text_report_path, "w") as report_file:
-      for line in status_strings:
-         report_file.write(line + "\n")
+   write_delivery_routes_pdf(delivery_with_bags_list, LOCAL_FOLDER_PATH, pdf_filename, \
+       client_info_dict, this_weeks_dates, delivery_routes_to_print)
+   files_to_print.append("./cover-pages/cover-Deliveries-per-route.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, pdf_filename))
 
    if test_mode:
       print(f'Test mode: skipping upload & printing of {files_to_print}')
@@ -216,6 +219,10 @@ if __name__ == "__main__":
       upload_folder(LOCAL_FOLDER_PATH, this_weeks_folder_id)
 
    # now print
-   for file_copies_tuple in files_to_print:
-      print(f'Printing {file_copies_tuple[1]} copies of {file_copies_tuple[0]}')
-      print_file(file_copies_tuple[0], copies=file_copies_tuple[1])
+   for filepath in files_to_print:
+      print(f'Printing {filepath}')
+      print_file(filepath)
+
+   # for file_copies_tuple in files_to_print:
+   #    print(f'Printing {file_copies_tuple[1]} copies of {file_copies_tuple[0]}')
+   #    print_file(file_copies_tuple[0], copies=file_copies_tuple[1])
