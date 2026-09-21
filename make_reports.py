@@ -3,6 +3,7 @@ from defines import SATURDAY_IDX
 import os
 from fpdf import FPDF, table
 from defines import GUEST_LIST_IDX_E, FRIDAY_IDX, SATURDAY_IDX
+import csv
 
 def normalize_phone_number(number):
    import re
@@ -377,3 +378,23 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
       return False
 
    return True
+
+def write_counts_csv(guest_list, output_directory, csv_filename):
+   #              visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
+   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
+   I_BAGS = 2
+   I_TIME_ROUTE = 3
+   I_FIRST = 4
+   I_LAST = 5
+   I_ITEMS = 6
+
+   visit_array   = [['Bags', 'Labels', 'Items', 'First', 'Last', 'Time/Route']]
+   for tuple in guest_list:
+      visit_array.append(["",tuple[I_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE]])
+
+   csv_path = os.path.join(output_directory, csv_filename)
+   with open(csv_path, 'w', newline='') as csvfile:
+      writer = csv.writer(csvfile)
+      writer.writerows(visit_array)
+
+   print(f'Done creating {csv_filename}: {len(visit_array)-1} guests')
