@@ -4,6 +4,7 @@ from fpdf import FPDF, table
 from PyPDF2 import PdfMerger # pyrefly: ignore [missing-import]
 from defines import GUEST_LIST_IDX_E, FRIDAY_IDX, SATURDAY_IDX, Table_def_deliveries_by_route
 import csv
+import xlsxwriter # pyrefly: ignore [missing-import]
 
 def normalize_phone_number(number):
    import re
@@ -183,6 +184,62 @@ def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, c
    #       os.remove(os.path.join("/tmp", pdf))
    #    except OSError:
    #       pass
+
+def write_driver_timing_schedule(guest_list, output_directory, output_filename):
+   routes_dict = {}  # just the route number before the colon
+   route_name_dict = {}
+   total_deliveries_count = 0
+
+   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
+   for visit_tuple in guest_list:
+      visit_route = visit_tuple[3].split(': ')[0]
+      if visit_route not in routes_dict:
+         routes_dict[visit_route] = 1
+         route_name_dict[visit_route] = visit_tuple[3].split(': ')[1]
+      else:
+         routes_dict[visit_route] += 1
+      total_deliveries_count += 1
+
+   routes_list = list(routes_dict.items())
+   routes_list.sort()
+   route_with_name_list = []
+   for route_set in routes_list:
+      route_with_name_list.append([route_set[0], route_name_dict[route_set[0]], route_set[1]])
+   # print(f"{route_with_name_list}")
+
+   # insert header:
+   header = ['Route', 'Route Name', 'Orders', \
+      'Minutes to complete','Completion Time','First Order Out', \
+      'Orders Complete','Vehicle/Driver','Driver arrival']
+   route_with_name_list.insert(0, header)
+   route_with_name_list.append(["",'Total', total_deliveries_count])
+
+   filename_path = os.path.join(output_directory, output_filename)
+   workbook = xlsxwriter.Workbook(filename_path) 
+
+   header_format = workbook.add_format({'bold': True})
+   header_format.set_font_name('Arial')
+   header_format.set_font_size(12)
+   header_format.set_text_wrap()
+   # print(f"{header_format}")
+
+   text_format = workbook.add_format()
+   text_format.set_font_name('Arial')
+   text_format.set_font_size(12)
+
+   worksheet = workbook.add_worksheet()
+   for row_number, content in enumerate(route_with_name_list):
+      if row_number == 0:
+         worksheet.write_row(row_number, 0, content, header_format)
+      else:
+         worksheet.write_row(row_number, 0, content, text_format)
+
+   column_widths = [6,18,7,10,11,10,10,10,10]
+   for column_number, column_width in enumerate(column_widths):
+      worksheet.set_column(column_number, column_number, column_width) #, text_format)
+
+   workbook.close()
+   print(f'{output_filename} has {total_deliveries_count} guests on {len(route_name_dict)} routes')
 
 
 
