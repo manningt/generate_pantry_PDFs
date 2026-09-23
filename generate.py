@@ -7,7 +7,8 @@
 #   "google-api-python-client",
 #   "google-auth-httplib2",
 #   "google-auth-oauthlib",
-#   "PyPDF2"
+#   "PyPDF2",
+#   "xlsxwriter",
 # ]
 # ///
 
@@ -26,9 +27,8 @@ from googleapiclient.http import MediaFileUpload # pyrefly: ignore [missing-impo
 from defines import GUEST_LIST_IDX_E, \
    Table_def_delivery_expeditor, Table_def_delivery_2column, Table_def_pickup_by_name, Table_def_pickup_by_time
 from get_guests_visits import load_token, get_client_lists, get_visits
-from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf, \
-   move_delivery_to_pickup
-from make_reports import write_report_pdf, write_counts_csv, write_delivery_routes_pdf
+from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf
+from make_reports import write_report_pdf, write_counts_csv, write_delivery_routes_pdf, write_driver_timing_schedule
 from move_delivery_to_pickup import move_delivery_to_pickup
 from make_delivery_tally import write_delivery_tally_csv
 from upload_folder_to_gdrive import upload_folder, get_folder_id
@@ -163,8 +163,8 @@ if __name__ == "__main__":
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
    write_counts_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.csv")
 
-   delivery_tally_csv_filename = f'Delivery_Tally_{this_weeks_dates[0][-5:]}.csv'
-   write_delivery_tally_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, delivery_tally_csv_filename)
+   write_delivery_tally_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, f'Delivery_Tally_{this_weeks_dates[0][-5:]}.csv')
+   write_driver_timing_schedule(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Delivery_Timing_Schedule_{this_weeks_dates[0][-5:]}.xlsx")
 
    filename_wo_extension = f'{filename_base}_2column_{this_weeks_dates[0][-5:]}'
    report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
@@ -197,6 +197,9 @@ if __name__ == "__main__":
 
    if test_mode:
       print(f'Test mode: skipping upload & printing of {files_to_print}')
+      for filepath in files_to_print:
+         if not os.path.exists(filepath):
+            print(f"Warning: {filepath} does not exist, so it won't print")
       exit()
 
    # report generation done, now upload to google drive
