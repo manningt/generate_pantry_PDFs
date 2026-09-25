@@ -16,39 +16,36 @@ AM_PM_TYPE = 'AM_PM'  # used for AM/PM guest lists
 
 class Table_def_pickup_by_name:
    number_of_columns = 2
-   number_of_rows_on_a_page = 40
    header = ["First", "Last", "Time", "Items"]
    column_widths = [64, 90, 38, 36]
    column_font = [12, 12, 12, 12]
    center_spacer_width = 40
+   row_height_multiplier = 1
 
 class Table_def_pickup_by_time:
    number_of_columns = 1
-   number_of_rows_on_a_page = 39
-   header = ["Bag", "Bags","Time", "First", "Last", "Items", "Phone"]
-   column_widths = [30, 34, 40, 80, 132, 36, 90]
+   header = ["Shop", "Bags","Time", "First", "Last", "Items", "Phone"]
+   column_widths = [40, 34, 40, 80, 132, 36, 90]
    column_font = [14, 14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
 
 class Table_def_delivery_expeditor:
    number_of_columns = 1
-   number_of_rows_on_a_page = 39
-   header = ["Bag", "Bags","Route", "First", "Last", "Items", "Phone"]
-   column_widths = [30, 34, 190, 72, 84, 36, 90]
+   header = ["Shop", "Bags","Route", "First", "Last", "Items", "Phone"]
+   column_widths = [40, 34, 190, 84, 84, 36, 90]
    column_font = [14, 14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
 
 class Table_def_delivery_2column:
    number_of_columns = 2
-   number_of_rows_on_a_page = 38
    header = ["First", "Last", "Route", "Items"]
    column_widths = [64, 90, 54, 36]
    column_font = [12, 12, 12, 12]
    center_spacer_width = 40
+   row_height_multiplier = 1
 
 class Table_def_deliveries_by_route:
    number_of_columns = 1
-   number_of_rows_on_a_page = 39
    header = ["Bags", "First", "Last", "Street", "Unit","Phone"]
    column_widths = [34, 84, 84, 150, 80, 90]
    column_font = [14, 14, 14, 14, 14, 14]
