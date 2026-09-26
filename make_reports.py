@@ -28,15 +28,12 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    #72 points = 1 inch;  612 points across page;  previous reports in excel had a font of 14 and a line height of 42 pixels
    pdf.set_margins(40, 24, 2) #left, top, right in points - 40 pix = .5"
 
-   if hasattr(table_def,"row_height_multiplier"):
-      multiplier = table_def.row_height_multiplier
-      # print(f"Using {table_def.row_height_multiplier=}")
-   else:
-      multiplier = 2.5
-   row_height = int(max(table_def.column_font) * multiplier)
+   cell_padding = (table_def.vertical_padding,2)
+   line_spacing = int(max(table_def.column_font) * 1.1)
+   cell_height = int(line_spacing + (table_def.vertical_padding * 2)) # add 1 for the cell border?
    # the followning works, but it's not all that precise:
-   number_of_rows_on_a_page = int((72*9)/(row_height+4)) # 9 inches is 1/2 top/bottom margins, plus header; 4 is the padding
-   # print(f"\t\t{number_of_rows_on_a_page=} {row_height=}")
+   number_of_rows_on_a_page = int(72*9/cell_height) # 9 inches is 1/2 top/bottom margins, plus header
+   # print(f"\t\t\t\t{cell_height=} {number_of_rows_on_a_page=}")
 
    widths = table_def.column_widths
    if table_def.number_of_columns == 1:
@@ -67,7 +64,7 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
          pdf.cell(0,0, f'{report_title}      Page {guest_list_page_number} of {page_count}', align="L")
          pdf.ln(pdf.font_size+4)
          pdf.set_font("Helvetica", "B", size=12)
-         with pdf.table(align="L", line_height=row_height, padding=2, width=sum(widths), col_widths=widths) as table:
+         with pdf.table(align="L", line_height=line_spacing, padding=cell_padding, width=sum(widths), col_widths=widths) as table:
             pdf_table_row = table.row()
             for column_title in table_def.header:
                pdf_table_row.cell(column_title)

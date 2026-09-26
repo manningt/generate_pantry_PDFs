@@ -20,7 +20,7 @@ class Table_def_pickup_by_name:
    column_widths = [64, 90, 38, 36]
    column_font = [12, 12, 12, 12]
    center_spacer_width = 40
-   row_height_multiplier = 1
+   vertical_padding = 3
 
 class Table_def_pickup_by_time:
    number_of_columns = 1
@@ -28,6 +28,7 @@ class Table_def_pickup_by_time:
    column_widths = [40, 34, 40, 80, 132, 36, 90]
    column_font = [14, 14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
+   vertical_padding = 12
 
 class Table_def_delivery_expeditor:
    number_of_columns = 1
@@ -35,6 +36,7 @@ class Table_def_delivery_expeditor:
    column_widths = [40, 34, 190, 84, 84, 36, 90]
    column_font = [14, 14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
+   vertical_padding = 12
 
 class Table_def_delivery_2column:
    number_of_columns = 2
@@ -42,7 +44,7 @@ class Table_def_delivery_2column:
    column_widths = [64, 90, 54, 36]
    column_font = [12, 12, 12, 12]
    center_spacer_width = 40
-   row_height_multiplier = 1
+   vertical_padding = 3
 
 class Table_def_deliveries_by_route:
    number_of_columns = 1
@@ -50,4 +52,5 @@ class Table_def_deliveries_by_route:
    column_widths = [34, 84, 84, 150, 80, 90]
    column_font = [14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
+   vertical_padding = 10
 
