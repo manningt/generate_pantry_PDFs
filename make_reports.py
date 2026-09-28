@@ -146,6 +146,43 @@ def write_counts_csv(guest_list, output_directory, csv_filename):
 
    print(f'{csv_filename} has {len(visit_array)-1} guests')
 
+def write_counts_xlsx(guest_list, output_directory, filename):
+   #              visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
+   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
+   I_BAGS = 2
+   I_TIME_ROUTE = 3
+   I_FIRST = 4
+   I_LAST = 5
+   I_ITEMS = 6
+
+   header = ['Bags', 'Labels', 'Items', 'First', 'Last', 'Time/Route']
+   visit_array   = []
+   for tuple in guest_list:
+      visit_array.append(["",tuple[I_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE]])
+
+   filename_path = os.path.join(output_directory, filename)
+   workbook = xlsxwriter.Workbook(filename_path) 
+   worksheet = workbook.add_worksheet()
+
+   header_format = workbook.add_format({'bold': True})
+   header_format.set_font_name('Arial')
+   header_format.set_font_size(12)
+   worksheet.write_row(0, 0, header, header_format)
+
+   text_format = workbook.add_format()
+   text_format.set_font_name('Arial')
+   text_format.set_font_size(12)
+   for row_number, content in enumerate(visit_array):
+      worksheet.write_row(row_number+1, 0, content, text_format)
+
+   column_widths = [6,7,6,12,17,27]
+   for column_number, column_width in enumerate(column_widths):
+      worksheet.set_column(column_number, column_number, column_width) #, text_format)
+
+   workbook.close()
+
+   print(f'{filename} has {len(visit_array)-1} guests')
+
 
 def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, client_info, this_weeks_date, routes_to_print):
    if len(deliveries_list) == 0:
