@@ -28,7 +28,7 @@ from defines import GUEST_LIST_IDX_E, \
    Table_def_delivery_expeditor, Table_def_delivery_2column, Table_def_pickup_by_name, Table_def_pickup_by_time
 from get_guests_visits import load_token, get_client_lists, get_visits
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf
-from make_reports import write_report_pdf, write_counts_csv, write_delivery_routes_pdf, write_driver_timing_schedule
+from make_reports import write_report_pdf, write_delivery_routes_pdf, write_driver_timing_schedule, write_counts_xlsx
 from move_delivery_to_pickup import move_delivery_to_pickup
 from make_delivery_tally import write_delivery_tally_csv
 from upload_folder_to_gdrive import upload_folder, get_folder_id
@@ -161,7 +161,7 @@ if __name__ == "__main__":
    write_report_pdf(delivery_with_bags_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_expeditor())
    files_to_print.append("./cover-pages/cover-Deliveries.pdf")
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
-   write_counts_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.csv")
+   write_counts_xlsx(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.xlsx")
 
    write_delivery_tally_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, f'Delivery_Tally_{this_weeks_dates[0][-5:]}.csv')
    write_driver_timing_schedule(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Delivery_Timing_Schedule_{this_weeks_dates[0][-5:]}.xlsx")
@@ -185,7 +185,7 @@ if __name__ == "__main__":
    write_report_pdf(pickup_by_time_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_time())
    files_to_print.append("./cover-pages/cover-Pickups-by-time.pdf")
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
-   write_counts_csv(pickup_by_time_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.csv")
+   write_counts_xlsx(pickup_by_time_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.xlsx  ")
 
    pdf_filename = f'Deliveries_per_route_{this_weeks_dates[0][-5:]}.pdf'
    # the following list is case sensitive, e.g. 07A should be 07a
