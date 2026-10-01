@@ -240,7 +240,11 @@ def write_driver_timing_schedule(guest_list, output_directory, output_filename):
       visit_route = visit_tuple[3].split(': ')[0]
       if visit_route not in routes_dict:
          routes_dict[visit_route] = 1
-         route_name_dict[visit_route] = visit_tuple[3].split(': ')[1]
+         try:
+            route_name_dict[visit_route] = visit_tuple[3].split(': ')[1]
+         except:
+            print(f"Route naming error for route '{visit_tuple[3]}' -  no semicolon")
+            route_name_dict[visit_route] = visit_tuple[3]
       else:
          routes_dict[visit_route] += 1
       total_deliveries_count += 1
