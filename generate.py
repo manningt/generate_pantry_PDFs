@@ -152,8 +152,12 @@ if __name__ == "__main__":
             report_file.write(line + "\n")
 
    move_delivery_to_time_slot_tuple_list = [('Quak','03:45')]
-   pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list = \
+   pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
+         delivery_before_move_list, pickup_on_friday_list, pickup_on_saturday_list = \
       move_delivery_to_pickup(guest_visit_lists, move_delivery_to_time_slot_tuple_list, client_info_dict)
+
+   # Note: currently delivery_with_item_list is not used; delivery_before_move_list is used
+   #   and pickup_by_name_list is not used; pickup_on_friday_list & pickup_on_saturdayday_list  are used instead
 
    filename_base = "Deliveries"
    filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
@@ -168,15 +172,22 @@ if __name__ == "__main__":
 
    filename_wo_extension = f'{filename_base}_2column_{this_weeks_dates[0][-5:]}'
    report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
-   write_report_pdf(delivery_with_item_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_2column())
+   # write_report_pdf(delivery_with_item_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_2column())
+   write_report_pdf(delivery_before_move_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_2column())
    files_to_print.append("./cover-pages/cover-Deliveries-2-column.pdf")
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
 
    filename_base = "Pickups_by_name"
    filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
-   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]} & {this_weeks_dates[1][-2:]}'
-   write_report_pdf(pickup_by_name_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
+   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
+   # write_report_pdf(pickup_by_name_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
+   write_report_pdf(pickup_on_friday_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
    files_to_print.append("./cover-pages/cover-Pickups-by-name.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
+
+   filename_wo_extension = f'{filename_base}_{this_weeks_dates[1][-5:]}'
+   report_header = f'{filename_base} for {this_weeks_dates[1][-5:]}'
+   write_report_pdf(pickup_on_saturday_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
 
    filename_base = "Pickups_by_time"
