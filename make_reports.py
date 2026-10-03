@@ -61,7 +61,7 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
          pdf.add_page()
          guest_list_page_number += 1
          pdf.set_font("Helvetica", "B", size=14)
-         pdf.cell(0,0, f'{report_title}      Page {guest_list_page_number} of {page_count}', align="L")
+         pdf.cell(0,0, f'{report_title}                {len(guest_list)} guests                     Page {guest_list_page_number} of {page_count}', align="L")
          pdf.ln(pdf.font_size+4)
          pdf.set_font("Helvetica", "B", size=12)
          with pdf.table(align="L", line_height=line_spacing, padding=cell_padding, width=sum(widths), col_widths=widths) as table:
@@ -125,7 +125,7 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    print(f"{pdf_report_filename} has {guest_count} guests on {guest_list_page_number} pages")
    return True
 
-
+# the following function is obsolete - using write_counts_xlsx instead
 def write_counts_csv(guest_list, output_directory, csv_filename):
    #              visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
    # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
@@ -154,11 +154,19 @@ def write_counts_xlsx(guest_list, output_directory, filename):
    I_FIRST = 4
    I_LAST = 5
    I_ITEMS = 6
+   I_PHONE = 7
 
-   header = ['Bags', 'Labels', 'Items', 'First', 'Last', 'Time/Route']
+   if len(guest_list[0][I_TIME_ROUTE]) == 5:
+      generate_pickup_file = True
+      header = ['Shop', 'Bags', 'Items', 'First', 'Last', 'Time', 'Phone']
+   else:
+      generate_pickup_file = False
+      header = ['Shop', 'Bags', 'Items', 'First', 'Last', 'Route', 'Phone']
+
+   # Phone is included so they can edit & print Expeditor report modifications
    visit_array   = []
    for tuple in guest_list:
-      visit_array.append(["",tuple[I_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE]])
+      visit_array.append(["",tuple[I_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE], tuple[I_PHONE]])
 
    filename_path = os.path.join(output_directory, filename)
    workbook = xlsxwriter.Workbook(filename_path) 
@@ -175,7 +183,11 @@ def write_counts_xlsx(guest_list, output_directory, filename):
    for row_number, content in enumerate(visit_array):
       worksheet.write_row(row_number+1, 0, content, text_format)
 
-   column_widths = [6,7,6,12,17,27]
+   if generate_pickup_file:
+      time_route_width = 6
+   else:
+      time_route_width = 27
+   column_widths = [6,6,6,12,17,time_route_width,15]
    for column_number, column_width in enumerate(column_widths):
       worksheet.set_column(column_number, column_number, column_width) #, text_format)
 
