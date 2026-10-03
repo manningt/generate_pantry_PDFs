@@ -30,9 +30,7 @@ from get_guests_visits import load_token, get_client_lists, get_visits
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf
 from make_reports import write_report_pdf, write_delivery_routes_pdf, write_driver_timing_schedule, write_counts_xlsx
 from move_delivery_to_pickup import move_delivery_to_pickup
-from make_delivery_tally import write_delivery_tally_csv
 from upload_folder_to_gdrive import upload_folder, get_folder_id
-
 
 def print_file(file_path: str, printer_name: str = None, copies: int = 1):
    # Prints a file using the CUPS/bash 'lp' command.
@@ -55,13 +53,14 @@ def print_file(file_path: str, printer_name: str = None, copies: int = 1):
       print(f"Printing failed (exit code {e.returncode}):", file=sys.stderr)
       print(e.stderr.strip(), file=sys.stderr)
 
+
 if __name__ == "__main__":
    now = datetime.now()
    print(f'Generating report & tag PDFs using PantrySoft API at {now}')
 
    # if run autonomously, check that it's Thursday
    if now.weekday() != 3:
-      this_weeks_dates = ["2026-09-25", "2026-09-26"]
+      this_weeks_dates = ["2026-10-02", "2026-10-03"]
       print(f'\tWarning: using hardcoded dates: {this_weeks_dates}')
    else:
       Fridays_date = now + timedelta(days=1)
@@ -156,55 +155,54 @@ if __name__ == "__main__":
          delivery_before_move_list, pickup_on_friday_list, pickup_on_saturday_list = \
       move_delivery_to_pickup(guest_visit_lists, move_delivery_to_time_slot_tuple_list, client_info_dict)
 
-   # Note: currently delivery_with_item_list is not used; delivery_before_move_list is used
+   # Note: currently delivery_with_item_list is not used; instead delivery_before_move_list is used
    #   and pickup_by_name_list is not used; pickup_on_friday_list & pickup_on_saturdayday_list  are used instead
 
-   filename_base = "Deliveries"
-   filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
-   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
-   write_report_pdf(delivery_with_bags_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_expeditor())
-   files_to_print.append("./cover-pages/cover-Deliveries.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
-   write_counts_xlsx(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.xlsx")
+   friday_MM_DD = this_weeks_dates[0][-5:]
+   saturday_MM_DD = this_weeks_dates[1][-5:]
 
-   write_delivery_tally_csv(delivery_with_bags_list, LOCAL_FOLDER_PATH, f'Delivery_Tally_{this_weeks_dates[0][-5:]}.csv')
-   write_driver_timing_schedule(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Delivery_Timing_Schedule_{this_weeks_dates[0][-5:]}.xlsx")
+   write_counts_xlsx(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Deliveries_{friday_MM_DD}.xlsx")
+   write_counts_xlsx(pickup_by_time_list, LOCAL_FOLDER_PATH, f"Pickups_{friday_MM_DD}_and_{saturday_MM_DD}.xlsx")
+   write_driver_timing_schedule(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Delivery_Timing_Schedule_{friday_MM_DD}.xlsx")
 
-   filename_wo_extension = f'{filename_base}_2column_{this_weeks_dates[0][-5:]}'
-   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
-   # write_report_pdf(delivery_with_item_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_2column())
-   write_report_pdf(delivery_before_move_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_delivery_2column())
-   files_to_print.append("./cover-pages/cover-Deliveries-2-column.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
+   #generate reports - make a tuple as follows:
+   #  (filename, MM_DD, list_name, report_header, table_def, print(True/False), cover_filename)
+   FILENAME = 0
+   DAY = 1
+   LIST_NAME = 2
+   REPORT_HEADER = 3
+   TABLE_DEF = 4
+   PRINT_IT = 5
+   COVER_FILE = 6
 
-   filename_base = "Pickups_by_name"
-   filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
-   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]}'
-   # write_report_pdf(pickup_by_name_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
-   write_report_pdf(pickup_on_friday_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
-   files_to_print.append("./cover-pages/cover-Pickups-by-name.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
+   reports_to_generate = [ \
+      ('Deliveries_Expeditor', friday_MM_DD, delivery_with_bags_list, 'Deliveries for', \
+          Table_def_delivery_expeditor(), True, "cover_Deliveries-Expeditor.pdf" ),
+      ('Pickups_Expeditor', friday_MM_DD, pickup_by_time_list, 'Pickups for', \
+          Table_def_delivery_expeditor(), True, "cover_Pickups-Expeditor.pdf" ),
+      ('Deliveries_2column', friday_MM_DD, delivery_before_move_list, 'Deliveries for', \
+          Table_def_delivery_2column(), True, "cover_Deliveries-and-Pickups-2column.pdf" ),
+      ('Pickups_by_name', friday_MM_DD, pickup_on_friday_list, 'Pickups for', \
+          Table_def_delivery_2column(), False, None ),
+      ('Pickups_by_name', saturday_MM_DD, pickup_on_saturday_list, 'Pickups for', \
+          Table_def_delivery_2column(), False, None ),
+      ]
 
-   filename_wo_extension = f'{filename_base}_{this_weeks_dates[1][-5:]}'
-   report_header = f'{filename_base} for {this_weeks_dates[1][-5:]}'
-   write_report_pdf(pickup_on_saturday_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_name())
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
-
-   filename_base = "Pickups_by_time"
-   filename_wo_extension = f'{filename_base}_{this_weeks_dates[0][-5:]}'
-   report_header = f'{filename_base} for {this_weeks_dates[0][-5:]} & {this_weeks_dates[1][-2:]}'
-   write_report_pdf(pickup_by_time_list, report_header, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf", Table_def_pickup_by_time())
-   files_to_print.append("./cover-pages/cover-Pickups-by-time.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, f"{filename_wo_extension}.pdf"))
-   write_counts_xlsx(pickup_by_time_list, LOCAL_FOLDER_PATH, f"{filename_wo_extension}.xlsx  ")
-
-   pdf_filename = f'Deliveries_per_route_{this_weeks_dates[0][-5:]}.pdf'
-   # the following list is case sensitive, e.g. 07A should be 07a
+   for report in reports_to_generate:
+      report_filename = f"{report[FILENAME]}_{report[DAY]}.pdf"
+      report_header = f"{report[REPORT_HEADER]} {report[DAY]}"
+      write_report_pdf(report[LIST_NAME], report_header, LOCAL_FOLDER_PATH, report_filename, report[TABLE_DEF])
+      if report[PRINT_IT]:
+         if report[COVER_FILE]:
+            files_to_print.append(os.path.join(COVER_PAGES_FOLDER_PATH, report[COVER_FILE]))
+         files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, report_filename))
+         
+   deliveries_per_route_filename = f'Deliveries_for_Sullivan_JSM_etc_{friday_MM_DD}.pdf'
    delivery_routes_to_print = ["01", "04", "08", "09", "20"]
-   write_delivery_routes_pdf(delivery_with_bags_list, LOCAL_FOLDER_PATH, pdf_filename, \
+   write_delivery_routes_pdf(delivery_with_bags_list, LOCAL_FOLDER_PATH, deliveries_per_route_filename, \
        client_info_dict, this_weeks_dates, delivery_routes_to_print)
-   files_to_print.append("./cover-pages/cover-Deliveries-per-route.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, pdf_filename))
+   files_to_print.append("./cover-pages/cover-Deliveries-for_Sullivan_JSM_etc.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, deliveries_per_route_filename))
 
    if test_mode:
       print(f'Test mode: skipping upload & printing of {files_to_print}')
