@@ -57,18 +57,14 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    else:
       print(f"Unsupported number of columns: {table_def.number_of_columns}; either 1 or 2")
       return
-   # print(f"\t\t\t\t{report_title} {cell_height=} {number_of_rows_on_a_page=}  {sum(widths)=} {widths=}")
 
    # print(f"Generating {pdf_report_filename} {report_title=}: ", end="")
    current_row = 0
    guest_list_page_number = 0
 
-   if table_def.number_of_columns == 2:
-      page_count = math.ceil((len(guest_list) // (number_of_rows_on_a_page * 2)))
-   else:
-      page_count = math.ceil((len(guest_list) // number_of_rows_on_a_page))
-   if page_count < 1:
-      page_count = 1
+   row_divisor = number_of_rows_on_a_page * table_def.number_of_columns
+   page_count = math.ceil((len(guest_list) / row_divisor))
+   # print(f"\t\t\t{report_title} {cell_height=}   {number_of_rows_on_a_page=} {page_count=}   {sum(widths)=} {widths=}")
 
    skipped_second_column = 0
    try:
