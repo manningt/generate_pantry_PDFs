@@ -148,12 +148,11 @@ if __name__ == "__main__":
       #       report_file.write(line + "\n")
 
    move_delivery_to_time_slot_tuple_list = [('Quak','03:45')]
-   pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
+   pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
          delivery_before_move_list, pickup_on_friday_list, pickup_on_saturday_list = \
       move_delivery_to_pickup(guest_visit_lists, move_delivery_to_time_slot_tuple_list, client_info_dict)
 
    # Note: currently delivery_with_item_list is not used; instead delivery_before_move_list is used
-   #   and pickup_by_name_list is not used; pickup_on_friday_list & pickup_on_saturdayday_list  are used instead
 
    friday_MM_DD = this_weeks_dates[0][-5:]
    saturday_MM_DD = this_weeks_dates[1][-5:]

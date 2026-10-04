@@ -17,7 +17,7 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
    # the route_time_tuple specifies which route to match, and what time the pickup is to be
    # it then returns a modified guest_list_list with the matched route moved to a pickup time
 
-   pickup_by_name_list = []
+   # pickup_by_name_list = []
    pickup_by_time_list = []
    delivery_with_item_list = []
    delivery_with_bags_list = []
@@ -55,7 +55,7 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
                   # replace 'None' with pickup time and first name with route name
                   # first_name_route_name = visit[3].split("- ")[1][9]
                   moved_visit_with_items = [visit_tuple[0], first_name, last_name, route_time_tuple[1], item_count]
-                  pickup_by_name_list.append(moved_visit_with_items)
+                  # pickup_by_name_list.append(moved_visit_with_items)
                   moved_visit_with_bags = [visit_tuple[0], "", "", bags, route_time_tuple[1], first_name, last_name, item_count, phone]
                   pickup_by_time_list.append(moved_visit_with_bags)
                   break
@@ -68,7 +68,7 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
             pickup_time = visit_tuple[2][:5]
             # Saturday pickups will naturally sort to the end when sorting by time since they are 8 to 12.
             visit_with_items = [visit_tuple[0], first_name[:8], last_name[:13], pickup_time, item_count]
-            pickup_by_name_list.append(visit_with_items)
+            # pickup_by_name_list.append(visit_with_items)
             visit_with_bags = [visit_tuple[0], "", "",bags, pickup_time, first_name, last_name, item_count, phone]
             pickup_by_time_list.append(visit_with_bags)
 
@@ -82,22 +82,22 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
    #    if i > 3: print(); break
 
    # visit_with_items = [visit_tuple[0], first_name[:8], last_name[:13], pickup_time, item_count]
-   pickup_items_sort =lambda x: (x[2], x[1])  #sort by last_name, first_name
-   pickup_by_name_list.sort(key=lambda x: (x[2], x[1]))
-   pickup_on_saturday_list.sort(key=lambda x: (x[2], x[1]))
-   pickup_on_friday_list.sort(key=lambda x: (x[2], x[1]))
+   pickup_items_sort_func = lambda x: (x[2], x[1])  #sort by last_name, first_name
+   # pickup_by_name_list.sort(key=pickup_items_sort_func)
+   pickup_on_saturday_list.sort(key=pickup_items_sort_func)
+   pickup_on_friday_list.sort(key=pickup_items_sort_func)
 
    # visit_with_bags = [visit_tuple[0], "", "",bags, pickup_time, first_name, last_name, item_count, phone]
-   pickup_by_time_list.sort(key=lambda x: (x[4], x[6], x[5]))  #sort by time, last_name, first
-
+   #delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
+   bags_sort_func = lambda x: (x[4], x[6], x[5])  #sort by time/route, last_name, first_name
+   pickup_by_time_list.sort(key=bags_sort_func)
+   delivery_with_bags_list.sort(key=bags_sort_func)
 
    #delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
-   delivery_before_move_list.sort(key=lambda x: (x[3], x[2], x[1]))  #sort by delivery_route, last_name, first name
-   delivery_with_item_list.sort(key=lambda x: (x[3], x[2], x[1]))
+   delivery_items_sort_func = lambda x: (x[3], x[2], x[1])  #sort by route, last_name, first_name
+   delivery_before_move_list.sort(key=delivery_items_sort_func)
+   delivery_with_item_list.sort(key=delivery_items_sort_func)
 
-   #delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
-   delivery_with_bags_list.sort(key=lambda x: (x[4], x[6], x[5]))  #sort by delivery_route, last_name, first
-
-   return pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
+   return pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
        delivery_before_move_list, pickup_on_friday_list, pickup_on_saturday_list
 
