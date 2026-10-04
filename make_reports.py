@@ -5,6 +5,7 @@ from PyPDF2 import PdfMerger # pyrefly: ignore [missing-import]
 from defines import GUEST_LIST_IDX_E, FRIDAY_IDX, SATURDAY_IDX, Table_def_deliveries_by_route
 import csv
 import xlsxwriter # pyrefly: ignore [missing-import]
+import math
 
 def normalize_phone_number(number):
    import re
@@ -33,7 +34,6 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    cell_height = int(line_spacing + (table_def.vertical_padding * 2)) # add 1 for the cell border?
    # the followning works, but it's not all that precise:
    number_of_rows_on_a_page = int(72*9/cell_height) # 9 inches is 1/2 top/bottom margins, plus header
-   # print(f"\t\t\t\t{cell_height=} {number_of_rows_on_a_page=}")
 
    widths = table_def.column_widths
    if table_def.number_of_columns == 1:
@@ -44,16 +44,18 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    else:
       print(f"Unsupported number of columns: {table_def.number_of_columns}; either 1 or 2")
       return
-   # print(f"{sum(widths)=} {widths=}")
+   # print(f"\t\t\t\t{report_title} {cell_height=} {number_of_rows_on_a_page=}  {sum(widths)=} {widths=}")
 
    # print(f"Generating {pdf_report_filename} {report_title=}: ", end="")
    current_row = 0
    guest_list_page_number = 0
 
    if table_def.number_of_columns == 2:
-      page_count = (len(guest_list) // (number_of_rows_on_a_page * 2)) + 1
+      page_count = math.ceil((len(guest_list) // (number_of_rows_on_a_page * 2)))
    else:
-      page_count = (len(guest_list) // number_of_rows_on_a_page) + 1
+      page_count = math.ceil((len(guest_list) // number_of_rows_on_a_page))
+   if page_count < 1:
+      page_count = 1
 
    skipped_second_column = 0
    try:
@@ -219,12 +221,12 @@ def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, c
             client_id = visit_tuple[I_CLIENT_ID]
             street = client_info[client_id][4]             
             unit = client_info[client_id][5]
-            guest_info = [client_id, "", visit_tuple[I_FIRST], visit_tuple[I_LAST], street, unit, visit_tuple[I_PHONE]]         
+            guest_info = [client_id, visit_tuple[I_FIRST], visit_tuple[I_LAST], street, unit, visit_tuple[I_PHONE]]         
             guests_on_route_list.append(guest_info)
-            full_route_name = visit_tuple[I_ROUTE] #need to save this for page title
+            route_name = visit_tuple[I_ROUTE][:14] #for page title
 
       if len(guests_on_route_list):
-         report_header = f"Deliveries for   {full_route_name}    for {this_weeks_date[0][-5:]}     "
+         report_header = f"Deliveries for {route_name} for {this_weeks_date[0][-5:]} "
          route_pdf_filename = f"route_{route_to_print_number}.pdf"
          write_report_pdf(guests_on_route_list, report_header, "/tmp", route_pdf_filename, Table_def_deliveries_by_route())
          pdf_filename_list.append(route_pdf_filename)
