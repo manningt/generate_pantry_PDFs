@@ -7,6 +7,16 @@ import csv
 import xlsxwriter # pyrefly: ignore [missing-import]
 import math
 
+#              visit_with_bags = [visit_tuple[0], "", "", bags, pickup_time, first_name, last_name, item_count, phone]
+# delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
+I_CLIENT_ID = 0
+I_ESTIMATED_BAGS = 3
+I_TIME_ROUTE = 4
+I_FIRST = 5
+I_LAST = 6
+I_ITEMS = 7
+I_PHONE = 8
+
 def normalize_phone_number(number):
    import re
    clean_number = re.sub("[^0-9]", "", str(number))
@@ -34,6 +44,9 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    cell_height = int(line_spacing + (table_def.vertical_padding * 2)) # add 1 for the cell border?
    # the followning works, but it's not all that precise:
    number_of_rows_on_a_page = int(72*9/cell_height) # 9 inches is 1/2 top/bottom margins, plus header
+
+   if len(table_def.column_widths) != len(table_def.column_font):
+      exit(f"{len(table_def.column_widths)=} does not equal {len(table_def.column_font)=}")
 
    widths = table_def.column_widths
    if table_def.number_of_columns == 1:
@@ -80,7 +93,7 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
                pdf_table_row = table.row()
                this_guest = guest_list[current_row].copy()
                del this_guest[0] # delete client_id
-               # print(f"{this_guest}", end="")
+               # print(f"{this_guest}")
                for idx, item in enumerate(this_guest):
                   pdf.set_font("Helvetica",  size=int(table_def.column_font[idx]))
                   pdf_table_row.cell(str(item))
@@ -127,48 +140,20 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
    print(f"{pdf_report_filename} has {guest_count} guests on {guest_list_page_number} pages")
    return True
 
-# the following function is obsolete - using write_counts_xlsx instead
-def write_counts_csv(guest_list, output_directory, csv_filename):
-   #              visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
-   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
-   I_BAGS = 2
-   I_TIME_ROUTE = 3
-   I_FIRST = 4
-   I_LAST = 5
-   I_ITEMS = 6
-
-   visit_array   = [['Bags', 'Labels', 'Items', 'First', 'Last', 'Time/Route']]
-   for tuple in guest_list:
-      visit_array.append(["",tuple[I_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE]])
-
-   csv_path = os.path.join(output_directory, csv_filename)
-   with open(csv_path, 'w', newline='') as csvfile:
-      writer = csv.writer(csvfile)
-      writer.writerows(visit_array)
-
-   print(f'{csv_filename} has {len(visit_array)-1} guests')
 
 def write_counts_xlsx(guest_list, output_directory, filename):
-   #              visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
-   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
-   I_BAGS = 2
-   I_TIME_ROUTE = 3
-   I_FIRST = 4
-   I_LAST = 5
-   I_ITEMS = 6
-   I_PHONE = 7
 
    if len(guest_list[0][I_TIME_ROUTE]) == 5:
       generate_pickup_file = True
-      header = ['Shop', 'Bags', 'Items', 'First', 'Last', 'Time', 'Phone']
+      header = ['Shop', 'Actual Bags', 'Est. Bags', 'Items', 'First', 'Last', 'Time', 'Phone']
    else:
       generate_pickup_file = False
-      header = ['Shop', 'Bags', 'Items', 'First', 'Last', 'Route', 'Phone']
+      header = ['Shop', 'Actual Bags', 'Est. Bags', 'Items', 'First', 'Last', 'Route', 'Phone']
 
    # Phone is included so they can edit & print Expeditor report modifications
    visit_array   = []
    for tuple in guest_list:
-      visit_array.append(["",tuple[I_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE], tuple[I_PHONE]])
+      visit_array.append(["","",tuple[I_ESTIMATED_BAGS], tuple[I_ITEMS], tuple[I_FIRST], tuple[I_LAST], tuple[I_TIME_ROUTE], tuple[I_PHONE]])
 
    filename_path = os.path.join(output_directory, filename)
    workbook = xlsxwriter.Workbook(filename_path) 
@@ -189,7 +174,7 @@ def write_counts_xlsx(guest_list, output_directory, filename):
       time_route_width = 6
    else:
       time_route_width = 27
-   column_widths = [6,6,6,12,17,time_route_width,15]
+   column_widths = [6,6,6,6,12,17,time_route_width,15]
    for column_number, column_width in enumerate(column_widths):
       worksheet.set_column(column_number, column_number, column_width) #, text_format)
 
@@ -203,27 +188,20 @@ def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, c
       print("Failure: no guest lists in request to generate PDF report on tag files.")
       return False
 
-   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
-   I_CLIENT_ID = 0
-   I_ROUTE = 3
-   I_FIRST = 4
-   I_LAST = 5
-   I_PHONE = 7
-
    guests_on_route_list = []
    pdf_filename_list = []
 
    for route_to_print_number in routes_to_print:
       guests_on_route_list = []
       for visit_tuple in deliveries_list:
-         this_guests_route_number = visit_tuple[I_ROUTE].split(":")[0]
+         this_guests_route_number = visit_tuple[I_TIME_ROUTE].split(":")[0]
          if this_guests_route_number == route_to_print_number:
             client_id = visit_tuple[I_CLIENT_ID]
             street = client_info[client_id][4]             
             unit = client_info[client_id][5]
             guest_info = [client_id, visit_tuple[I_FIRST], visit_tuple[I_LAST], street, unit, visit_tuple[I_PHONE]]         
             guests_on_route_list.append(guest_info)
-            route_name = visit_tuple[I_ROUTE][:14] #for page title
+            route_name = visit_tuple[I_TIME_ROUTE][:14] #for page title
 
       if len(guests_on_route_list):
          report_header = f"Deliveries for {route_name} for {this_weeks_date[0][-5:]} "
@@ -249,16 +227,16 @@ def write_driver_timing_schedule(guest_list, output_directory, output_filename):
    route_name_dict = {}
    total_deliveries_count = 0
 
-   # delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
+   # delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
    for visit_tuple in guest_list:
-      visit_route = visit_tuple[3].split(': ')[0]
+      visit_route = visit_tuple[I_TIME_ROUTE].split(': ')[0]
       if visit_route not in routes_dict:
          routes_dict[visit_route] = 1
          try:
-            route_name_dict[visit_route] = visit_tuple[3].split(': ')[1]
+            route_name_dict[visit_route] = visit_tuple[I_TIME_ROUTE].split(': ')[1]
          except:
             print(f"Route naming error for route '{visit_tuple[3]}' -  no semicolon")
-            route_name_dict[visit_route] = visit_tuple[3]
+            route_name_dict[visit_route] = visit_tuple[I_TIME_ROUTE]
       else:
          routes_dict[visit_route] += 1
       total_deliveries_count += 1

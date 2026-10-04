@@ -161,8 +161,8 @@ if __name__ == "__main__":
    friday_MM_DD = this_weeks_dates[0][-5:]
    saturday_MM_DD = this_weeks_dates[1][-5:]
 
-   write_counts_xlsx(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Deliveries_{friday_MM_DD}.xlsx")
-   write_counts_xlsx(pickup_by_time_list, LOCAL_FOLDER_PATH, f"Pickups_{friday_MM_DD}_and_{saturday_MM_DD}.xlsx")
+   write_counts_xlsx(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Deliveries_Expeditor_{friday_MM_DD}_generated.xlsx")
+   write_counts_xlsx(pickup_by_time_list, LOCAL_FOLDER_PATH, f"Pickups_Expeditor_{friday_MM_DD}_{saturday_MM_DD}_generated.xlsx")
    write_driver_timing_schedule(delivery_with_bags_list, LOCAL_FOLDER_PATH, f"Delivery_Timing_Schedule_{friday_MM_DD}.xlsx")
 
    #generate reports - make a tuple as follows:
@@ -179,7 +179,7 @@ if __name__ == "__main__":
       ('Deliveries_Expeditor', friday_MM_DD, delivery_with_bags_list, 'Deliveries for', \
           Table_def_delivery_expeditor(), True, "cover_Deliveries-Expeditor.pdf" ),
       ('Pickups_Expeditor', friday_MM_DD, pickup_by_time_list, 'Pickups for', \
-          Table_def_delivery_expeditor(), True, "cover_Pickups-Expeditor.pdf" ),
+          Table_def_pickup_by_time(), True, "cover_Pickups-Expeditor.pdf" ),
       ('Deliveries_2column', friday_MM_DD, delivery_before_move_list, 'Deliveries for', \
           Table_def_delivery_2column(), True, "cover_Deliveries-and-Pickups-2column.pdf" ),
       ('Pickups_by_name', friday_MM_DD, pickup_on_friday_list, 'Pickups for', \

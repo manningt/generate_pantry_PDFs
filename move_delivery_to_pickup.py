@@ -29,6 +29,9 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
    pickup_on_friday_list = []
    pickup_on_saturday_list = []
 
+   LONG_ROUTE_LENGTH = 18
+   SHORT_ROUTE_LENGTH = 7
+
    for g_l_index in range(len(guest_list_list)):
       for visit_tuple in guest_list_list[g_l_index]:
          client_id = str(visit_tuple[0])
@@ -42,8 +45,8 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
          
          if g_l_index == GUEST_LIST_IDX_E.Delivery.value:
             last_name = visit_tuple[4][:19] # has asterisk in last name for priority
-            route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:25]
-            delivery_before_move_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
+            route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:LONG_ROUTE_LENGTH]
+            delivery_before_move_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
 
             # move from delivery to pickup:  example route tuple: [('Quak','03:45')]
             for route_time_tuple in route_time_tuple_list:
@@ -53,20 +56,20 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
                   # first_name_route_name = visit[3].split("- ")[1][9]
                   moved_visit_with_items = [visit_tuple[0], first_name, last_name, route_time_tuple[1], item_count]
                   pickup_by_name_list.append(moved_visit_with_items)
-                  moved_visit_with_bags = [visit_tuple[0], "", bags, route_time_tuple[1], first_name, last_name, item_count, phone]
+                  moved_visit_with_bags = [visit_tuple[0], "", "", bags, route_time_tuple[1], first_name, last_name, item_count, phone]
                   pickup_by_time_list.append(moved_visit_with_bags)
                   break
                else:
-                  route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:25]
-                  delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
-                  delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
+                  route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:LONG_ROUTE_LENGTH]
+                  delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
+                  delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
          else:
             last_name = client_info[client_id][1][:19] #does not have asterisk for sorting
             pickup_time = visit_tuple[2][:5]
             # Saturday pickups will naturally sort to the end when sorting by time since they are 8 to 12.
             visit_with_items = [visit_tuple[0], first_name[:8], last_name[:13], pickup_time, item_count]
             pickup_by_name_list.append(visit_with_items)
-            visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
+            visit_with_bags = [visit_tuple[0], "", "",bags, pickup_time, first_name, last_name, item_count, phone]
             pickup_by_time_list.append(visit_with_bags)
 
             if g_l_index == GUEST_LIST_IDX_E.Pickup_Saturday.value:
@@ -79,20 +82,21 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
    #    if i > 3: print(); break
 
    # visit_with_items = [visit_tuple[0], first_name[:8], last_name[:13], pickup_time, item_count]
-   pickup_by_name_list.sort(key=lambda x: (x[2], x[1]))  #sort by last_name, first_name
+   pickup_items_sort =lambda x: (x[2], x[1])  #sort by last_name, first_name
+   pickup_by_name_list.sort(key=lambda x: (x[2], x[1]))
    pickup_on_saturday_list.sort(key=lambda x: (x[2], x[1]))
    pickup_on_friday_list.sort(key=lambda x: (x[2], x[1]))
 
-   # visit_with_bags = [visit_tuple[0], "", bags, pickup_time, first_name, last_name, item_count, phone]
-   pickup_by_time_list.sort(key=lambda x: (x[3], x[5], x[4]))  #sort by time, last_name, first
+   # visit_with_bags = [visit_tuple[0], "", "",bags, pickup_time, first_name, last_name, item_count, phone]
+   pickup_by_time_list.sort(key=lambda x: (x[4], x[6], x[5]))  #sort by time, last_name, first
 
 
    #delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
    delivery_before_move_list.sort(key=lambda x: (x[3], x[2], x[1]))  #sort by delivery_route, last_name, first name
    delivery_with_item_list.sort(key=lambda x: (x[3], x[2], x[1]))
 
-   #delivery_with_bags_list.append([visit_tuple[0], "", bags, route, first_name, last_name, item_count, phone])
-   delivery_with_bags_list.sort(key=lambda x: (x[3], x[5]))  #sort by delivery_route, last_name 
+   #delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
+   delivery_with_bags_list.sort(key=lambda x: (x[4], x[6], x[5]))  #sort by delivery_route, last_name, first
 
    return pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
        delivery_before_move_list, pickup_on_friday_list, pickup_on_saturday_list
