@@ -17,6 +17,7 @@ import subprocess
 from datetime import datetime, timedelta
 from calendar import month_name
 import json
+from PyPDF2 import PdfMerger # pyrefly: ignore [missing-import]
 
 from google.auth.transport.requests import Request # pyrefly: ignore [missing-import]
 from google.oauth2.credentials import Credentials # pyrefly: ignore [missing-import]
@@ -181,21 +182,30 @@ if __name__ == "__main__":
       ('Pickups_Expeditor', friday_MM_DD, pickup_by_time_list, 'Pickups for', \
           Table_def_pickup_by_time(), True, "cover_Pickups-Expeditor.pdf" ),
       ('Deliveries_2column', friday_MM_DD, delivery_before_move_list, 'Deliveries for', \
-          Table_def_delivery_2column(), True, "cover_Deliveries-and-Pickups-2column.pdf" ),
+          Table_def_delivery_2column(), False, None ),
       ('Pickups_by_name', friday_MM_DD, pickup_on_friday_list, 'Pickups for', \
           Table_def_delivery_2column(), False, None ),
       ('Pickups_by_name', saturday_MM_DD, pickup_on_saturday_list, 'Pickups for', \
           Table_def_delivery_2column(), False, None ),
       ]
 
+   files_to_merge = []
    for report in reports_to_generate:
       report_filename = f"{report[FILENAME]}_{report[DAY]}.pdf"
       report_header = f"{report[REPORT_HEADER]} {report[DAY]}"
-      write_report_pdf(report[LIST_NAME], report_header, LOCAL_FOLDER_PATH, report_filename, report[TABLE_DEF])
+      # kludgy: generate 2-column PDFs in /tmp
+      if report[PRINT_IT]:
+         folder_path = LOCAL_FOLDER_PATH
+      else:
+         folder_path = "/tmp"
+         
+      write_report_pdf(report[LIST_NAME], report_header, folder_path, report_filename, report[TABLE_DEF])
       if report[PRINT_IT]:
          if report[COVER_FILE]:
             files_to_print.append(os.path.join(COVER_PAGES_FOLDER_PATH, report[COVER_FILE]))
          files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, report_filename))
+      else:
+         files_to_merge.append(report_filename)
          
    deliveries_per_route_filename = f'Deliveries_for_Sullivan_JSM_etc_{friday_MM_DD}.pdf'
    delivery_routes_to_print = ["01", "04", "08", "09", "20"]
@@ -203,6 +213,16 @@ if __name__ == "__main__":
        client_info_dict, this_weeks_dates, delivery_routes_to_print)
    files_to_print.append("./cover-pages/cover-Deliveries-for_Sullivan_JSM_etc.pdf")
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, deliveries_per_route_filename))
+
+   # merge the 2-column PDFs
+   dual_column_filename = f'Deliveries-and-Pickups-2column_{friday_MM_DD}.pdf'
+   merger = PdfMerger()
+   for pdf in files_to_merge:
+      merger.append(os.path.join("/tmp", pdf))
+   merger.write(os.path.join(LOCAL_FOLDER_PATH, dual_column_filename))
+   merger.close()
+   files_to_print.append("./cover-pages/cover_Deliveries-and-Pickups-2column.pdf")
+   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, dual_column_filename))
 
    if test_mode:
       print(f'Test mode: skipping upload & printing of {files_to_print}')
