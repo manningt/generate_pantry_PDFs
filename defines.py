@@ -50,7 +50,7 @@ class Table_def_deliveries_by_route:
    number_of_columns = 1
    header = ["First", "Last", "Street", "Unit","Phone"]
    column_widths = [84, 84, 150, 80, 90]
-   column_font = [14, 14, 14, 14, 14, 14]
+   column_font = [14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
    vertical_padding = 3
 
