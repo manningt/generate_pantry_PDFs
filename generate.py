@@ -134,22 +134,18 @@ if __name__ == "__main__":
          else:
             type = 'Pickup'
 
-         pdf_filename = f'Tags-for-{GUEST_LIST_IDX_E(list_idx).name}.pdf'
+         pdf_filename = f'Tags_for_{GUEST_LIST_IDX_E(list_idx).name}.pdf'
          status_string = make_label_pdfs(guest_list, type, pdf_filename, LOCAL_FOLDER_PATH, client_info_dict)
          print(status_string)
          status_strings.append(status_string)
 
-      TAG_PDF_REPORT_FILENAME = 'segregated-list-of-guests-in-tag-pdf-files.pdf'
+      TAG_PDF_REPORT_FILENAME = 'List_of_guests_per_tag_pdf_file.pdf'
       write_tag_report_pdf(guest_visit_lists, status_strings, LOCAL_FOLDER_PATH, TAG_PDF_REPORT_FILENAME, client_info_dict)
 
-      # not printing this the tags report
-      # files_to_print.append(("./cover-pages/cover-Tags-summary.pdf",1))
-      # files_to_print.append((os.path.join(LOCAL_FOLDER_PATH, TAG_PDF_REPORT_FILENAME),1))
-
-      text_report_path = os.path.join(LOCAL_FOLDER_PATH, "make_tags_report.txt")
-      with open(text_report_path, "w") as report_file:
-         for line in status_strings:
-            report_file.write(line + "\n")
+      # text_report_path = os.path.join(LOCAL_FOLDER_PATH, "make_tags_report.txt")
+      # with open(text_report_path, "w") as report_file:
+      #    for line in status_strings:
+      #       report_file.write(line + "\n")
 
    move_delivery_to_time_slot_tuple_list = [('Quak','03:45')]
    pickup_by_name_list, pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
@@ -194,11 +190,7 @@ if __name__ == "__main__":
       report_filename = f"{report[FILENAME]}_{report[DAY]}.pdf"
       report_header = f"{report[REPORT_HEADER]} {report[DAY]}"
       # kludgy: generate 2-column PDFs in /tmp
-      if report[PRINT_IT]:
-         folder_path = LOCAL_FOLDER_PATH
-      else:
-         folder_path = "/tmp"
-         
+      folder_path = LOCAL_FOLDER_PATH if report[PRINT_IT] else "/tmp"
       write_report_pdf(report[LIST_NAME], report_header, folder_path, report_filename, report[TABLE_DEF])
       if report[PRINT_IT]:
          if report[COVER_FILE]:
