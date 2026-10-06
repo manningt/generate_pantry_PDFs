@@ -132,25 +132,25 @@ def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=Fals
             folder_id = None
             for item in items:
                 if item['mimeType'] == 'application/vnd.google-apps.folder':
-                    if i < 2 and item['name'] == date_list[i]:
-                        #year, month
-                        folder_id = item['id']
-                        folder_path += f"{item['name']}/"
+                    if i < 2:
+                        if item['name'] == date_list[i]:
+                            #year, month
+                            folder_id = item['id']
+                            folder_path += f"{item['name']}/"
+                            break
                     else:
+                        month_abbrev = date_list[1][:3]
                         #separate month and day: month will be [0], day will be [1]
                         parsed_folder_name = item['name'].replace('-', ' ').replace('_', ' ').split(" ")
                         if len(parsed_folder_name) != 2:
-                            print(f"parsing month-day={item['name']} failed")
+                            print(f"skipping {item['name']} when looking for {month_abbrev}-{date_list[2]}; it did not have a dash, space, or underscore")
                         else:
                             # compare 3 characters of month with folder name and integer of day
-                            month_abbrev = date_list[1][:3]
                             # print(f"{month_abbrev=}")
                             if parsed_folder_name[0].startswith(month_abbrev) and int(parsed_folder_name[1]) == int(date_list[2]):
                                 folder_id = item['id']
                                 folder_path += f"{item['name']}/"
-                if folder_id:
-                    # print(f"found folder: {item['name']} (ID: {item['id']})")
-                    break
+                                break
 
             if not folder_id:
                 if create_if_not_present:
