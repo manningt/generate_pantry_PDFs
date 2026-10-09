@@ -52,11 +52,10 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
             for route_time_tuple in route_time_tuple_list:
                # test if route of visit is equal to one of the 
                if route_time_tuple[0] in visit_tuple[3]:
-                  # replace 'None' with pickup time and first name with route name
-                  # first_name_route_name = visit[3].split("- ")[1][9]
                   moved_visit_with_items = [visit_tuple[0], first_name, last_name, route_time_tuple[1], item_count]
-                  # pickup_by_name_list.append(moved_visit_with_items)
-                  moved_visit_with_bags = [visit_tuple[0], "", "", bags, route_time_tuple[1], first_name, last_name, item_count, phone]
+                  # add route to first name for the pickup expeditor report
+                  route_plus_first_name = f"{route_time_tuple[0][:4]}: {first_name[:8]}"
+                  moved_visit_with_bags = [visit_tuple[0], "", "", bags, route_time_tuple[1], route_plus_first_name, last_name, item_count, phone]
                   pickup_by_time_list.append(moved_visit_with_bags)
                   break
                else:
