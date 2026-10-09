@@ -25,7 +25,7 @@ class Table_def_pickup_by_name:
 class Table_def_pickup_by_time:
    number_of_columns = 1
    header = ["Shop", "Actual Bags", "Est. Bags","Time", "First", "Last", "Items", "Phone"]
-   column_widths = [40, 42, 34, 40, 80, 132, 36, 90]
+   column_widths = [40, 42, 34, 40, 110, 132, 36, 90]
    column_font = [14, 14, 14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
    vertical_padding = 12
