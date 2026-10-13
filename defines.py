@@ -54,3 +54,10 @@ class Table_def_deliveries_by_route:
    center_spacer_width = 0 # unused
    vertical_padding = 3
 
+class Table_def_saturday_staging:
+   number_of_columns = 1
+   header = ["Freezer", "Fridge", "Shelf", "Total", "Est. Bags","Items", "First", "Last", "Time", "Phone"]
+   column_widths = [48, 46, 50, 38, 34, 36, 80, 90, 40, 90]
+   column_font = [14, 14, 14, 14, 14, 14, 14, 14, 14, 14]
+   center_spacer_width = 0 # unused
+   vertical_padding = 12

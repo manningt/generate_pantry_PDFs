@@ -26,10 +26,11 @@ from googleapiclient.discovery import build # pyrefly: ignore [missing-import]
 from googleapiclient.http import MediaFileUpload # pyrefly: ignore [missing-import]
 
 from defines import GUEST_LIST_IDX_E, \
-   Table_def_delivery_expeditor, Table_def_delivery_2column, Table_def_pickup_by_name, Table_def_pickup_by_time
+   Table_def_delivery_expeditor, Table_def_delivery_2column, Table_def_saturday_staging, Table_def_pickup_by_time
 from get_guests_visits import load_token, get_client_lists, get_visits
 from make_bag_tags_and_report import make_label_pdfs, write_tag_report_pdf
-from make_reports import write_report_pdf, write_delivery_routes_pdf, write_driver_timing_schedule, write_counts_xlsx
+from make_reports import write_report_pdf, write_delivery_routes_pdf, \
+                           write_driver_timing_schedule, write_counts_xlsx, make_staging_list
 from move_delivery_to_pickup import move_delivery_to_pickup
 from upload_folder_to_gdrive import upload_folder, get_folder_id
 
@@ -154,6 +155,8 @@ if __name__ == "__main__":
 
    # Note: currently delivery_with_item_list is not used; instead delivery_before_move_list is used
 
+   staging_list = make_staging_list(pickup_by_time_list)
+
    friday_MM_DD = this_weeks_dates[0][-5:]
    saturday_MM_DD = this_weeks_dates[1][-5:]
 
@@ -182,6 +185,8 @@ if __name__ == "__main__":
           Table_def_delivery_2column(), False, None ),
       ('Pickups_by_name', saturday_MM_DD, pickup_on_saturday_list, 'Pickups for', \
           Table_def_delivery_2column(), False, None ),
+      ('Pickups_Saturday_Staging', saturday_MM_DD, staging_list, 'Staging for Saturday Pickups for', \
+          Table_def_saturday_staging(), True, "cover_Pickups-Staging.pdf" ),
       ]
 
    files_to_merge = []
