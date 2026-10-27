@@ -48,11 +48,11 @@ class Table_def_delivery_2column:
 
 class Table_def_deliveries_by_route:
    number_of_columns = 1
-   header = ["First", "Last", "Street", "Unit","Phone"]
-   column_widths = [84, 84, 150, 80, 90]
-   column_font = [14, 14, 14, 14, 14]
+   header = ["Bags", "Est. Bags", "First", "Last", "Unit","Phone"]
+   column_widths = [40,40, 84, 84, 80, 90]
+   column_font = [14, 14, 14, 14, 14, 14]
    center_spacer_width = 0 # unused
-   vertical_padding = 3
+   vertical_padding = 10
 
 class Table_def_saturday_staging:
    number_of_columns = 1

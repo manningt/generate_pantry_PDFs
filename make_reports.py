@@ -72,7 +72,7 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
          pdf.add_page()
          guest_list_page_number += 1
          pdf.set_font("Helvetica", "B", size=14)
-         pdf.cell(0,0, f'{report_title}                {len(guest_list)} guests                     Page {guest_list_page_number} of {page_count}', align="L")
+         pdf.cell(0,0, f'{report_title}             {len(guest_list)} guests            Page {guest_list_page_number} of {page_count}', align="L")
          pdf.ln(pdf.font_size+4)
          pdf.set_font("Helvetica", "B", size=12)
          with pdf.table(align="L", line_height=line_spacing, padding=cell_padding, width=sum(widths), col_widths=widths) as table:
@@ -189,15 +189,17 @@ def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, c
 
    for route_to_print_number in routes_to_print:
       guests_on_route_list = []
+      route_name = None
       for visit_tuple in deliveries_list:
          this_guests_route_number = visit_tuple[I_TIME_ROUTE].split(":")[0]
          if this_guests_route_number == route_to_print_number:
             client_id = visit_tuple[I_CLIENT_ID]
-            street = client_info[client_id][4]             
             unit = client_info[client_id][5]
-            guest_info = [client_id, visit_tuple[I_FIRST], visit_tuple[I_LAST], street, unit, visit_tuple[I_PHONE]]         
+            guest_info = [client_id, "",visit_tuple[I_ESTIMATED_BAGS], visit_tuple[I_FIRST], visit_tuple[I_LAST], unit, visit_tuple[I_PHONE]]         
             guests_on_route_list.append(guest_info)
-            route_name = visit_tuple[I_TIME_ROUTE][:14] #for page title
+            if not route_name:
+               street = client_info[client_id][4].split(" St")[0] #strip off Street         
+               route_name = f"{visit_tuple[I_TIME_ROUTE][:14]} ({street})" #for page title
 
       if len(guests_on_route_list):
          report_header = f"Deliveries for {route_name} for {this_weeks_date[0][-5:]} "
