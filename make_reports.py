@@ -232,8 +232,8 @@ def write_driver_timing_schedule(guest_list, output_directory, output_filename):
          routes_dict[visit_route] = 1
          try:
             route_name_dict[visit_route] = visit_tuple[I_TIME_ROUTE].split(': ')[1]
-         except:
-            print(f"Route naming error for route '{visit_tuple[3]}' -  no semicolon")
+         except Exception:
+            print(f"Route naming error for route '{visit_tuple[3]}' has no semicolon - client: {visit_tuple[I_CLIENT_ID]} last: {visit_tuple[I_LAST]} ")
             route_name_dict[visit_route] = visit_tuple[I_TIME_ROUTE]
       else:
          routes_dict[visit_route] += 1
