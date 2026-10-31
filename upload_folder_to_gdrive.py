@@ -95,6 +95,10 @@ def upload_folder(local_folder_path, shared_folder_id, created_folder_name = Non
         else:
             folder_id_for_upload = shared_folder_id
             upload_folder_name = shared_folder_id
+        # In the following loop: If local_folder_path has nested subfolders,
+        # all files across all sub-levels will be flattened 
+        # into the top-level Drive folder instead of recreating the subfolder tree.
+        # ignoring this problem, since the directory is expected to be a flat directory.
         for (root, dirs, files) in os.walk(local_folder_path):
             if len(files) == 0:
                 print('No files to upload')
@@ -113,8 +117,8 @@ def upload_folder(local_folder_path, shared_folder_id, created_folder_name = Non
 def get_folder_id(top_level_shared_folder, date_list, create_if_not_present=False):
     try:
         service = authenticate_drive()
-    except:
-        print("Failed Google Authentication")
+    except Exception as e:
+        print(f"Failed Google Authentication: {e}")
         return None, None, None
     # date_list = ["2027", "February", "05"]
     folder_id = None
@@ -207,34 +211,6 @@ def list_folder_contents(service, folder_id: str):
         print(f"An error occurred: {error}")
 
     return items
-
-'''
-def upload_directory_recursive(service, local_dir_path, drive_parent_id):
-    #Recursively uploads a local folder and its contents to Google Drive.
-    dir_name = os.path.basename(os.path.normpath(local_dir_path))
-    print(f"\n Creating target folder on Drive: '{dir_name}'...")
-    
-    # Create the root folder in Drive
-    current_drive_folder_id = create_drive_folder(service, dir_name, drive_parent_id)
-    
-    # Mapping of local folder paths -> corresponding Drive folder IDs
-    folder_mapping = {os.path.abspath(local_dir_path): current_drive_folder_id}
-
-    for root, dirs, files in os.walk(local_dir_path):
-        current_parent_drive_id = folder_mapping[os.path.abspath(root)]
-        
-        # 1. Create subdirectories in Drive
-        for d in dirs:
-            local_subfolder_path = os.path.join(root, d)
-            print(f"Creating subfolder: {d}")
-            new_drive_id = create_drive_folder(service, d, current_parent_drive_id)
-            folder_mapping[os.path.abspath(local_subfolder_path)] = new_drive_id
-
-        # 2. Upload files into current folder level
-        for f in files:
-            local_file_path = os.path.join(root, f)
-            upload_file_to_drive(service, local_file_path, current_parent_drive_id)
-'''
 
 if __name__ == '__main__':
 
