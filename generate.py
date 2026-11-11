@@ -127,6 +127,9 @@ if __name__ == "__main__":
       print(f'Using saved visits file {TEMPORARY_GUEST_VISIT_LIST_FILENAME}', flush=True)
 
    status_strings = []
+   #eliminate before/after 3 lists
+   guest_visit_lists[GUEST_LIST_IDX_E.Pickup_Friday_before_3.value] += guest_visit_lists[GUEST_LIST_IDX_E.Pickup_Friday_after_3.value]
+   guest_visit_lists[GUEST_LIST_IDX_E.Pickup_Friday_after_3.value] = []
    if True:
       for list_idx, guest_list in enumerate(guest_visit_lists):
          guest_list.sort(key=lambda x: (x[3], x[4]))  #sort by delivery_route, last_name -or- last_name or first_name
@@ -135,7 +138,10 @@ if __name__ == "__main__":
          else:
             type = 'Pickup'
 
-         pdf_filename = f'Tags_for_{GUEST_LIST_IDX_E(list_idx).name}.pdf'
+         if list_idx == GUEST_LIST_IDX_E.Pickup_Friday_before_3.value:
+            pdf_filename = f'Tags_for_Pickup_Friday.pdf'
+         else:
+            pdf_filename = f'Tags_for_{GUEST_LIST_IDX_E(list_idx).name}.pdf'
          status_string = make_label_pdfs(guest_list, type, pdf_filename, LOCAL_FOLDER_PATH, client_info_dict)
          print(status_string)
          status_strings.append(status_string)
