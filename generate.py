@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
    # if run autonomously, check that it's Thursday
    if now.weekday() != 3:
-      this_weeks_dates = ["2026-10-02", "2026-10-03"]
+      this_weeks_dates = ["2026-11-13", "2026-11-14"]
       print(f'\tWarning: using hardcoded dates: {this_weeks_dates}')
    else:
       Fridays_date = now + timedelta(days=1)
