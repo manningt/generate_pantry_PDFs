@@ -1,6 +1,7 @@
 __pycache__/
 examples/
 output_files/
+output_files-for-compare/
 cover-pages/
 *.json
 my-*
