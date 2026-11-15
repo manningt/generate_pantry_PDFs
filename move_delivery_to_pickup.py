@@ -49,19 +49,16 @@ def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info)
             delivery_before_move_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
 
             # move from delivery to pickup:  example route tuple: [('Quak','03:45')]
-            for route_time_tuple in route_time_tuple_list:
-               # test if route of visit is equal to one of the 
-               if route_time_tuple[0] in visit_tuple[3]:
-                  moved_visit_with_items = [visit_tuple[0], first_name, last_name, route_time_tuple[1], item_count]
-                  # add route to first name for the pickup expeditor report
-                  route_plus_first_name = f"{route_time_tuple[0][:4]}: {first_name[:8]}"
-                  moved_visit_with_bags = [visit_tuple[0], "", "", bags, route_time_tuple[1], route_plus_first_name, last_name, item_count, phone]
-                  pickup_by_time_list.append(moved_visit_with_bags)
-                  break
-               else:
-                  route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:LONG_ROUTE_LENGTH]
-                  delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
-                  delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
+            matched_route = next((rt for rt in route_time_tuple_list if rt[0] in visit_tuple[3]), None)
+            if matched_route:
+               moved_visit_with_items = [visit_tuple[0], first_name, last_name, matched_route[1], item_count]
+               # add route to first name for the pickup expeditor report
+               route_plus_first_name = f"{matched_route[0][:4]}: {first_name[:8]}"
+               moved_visit_with_bags = [visit_tuple[0], "", "", bags, matched_route[1], route_plus_first_name, last_name, item_count, phone]
+               pickup_by_time_list.append(moved_visit_with_bags)
+            else:
+               delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
+               delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
          else:
             last_name = client_info[client_id][1][:19] #does not have asterisk for sorting
             pickup_time = visit_tuple[2][:5]
