@@ -13,87 +13,141 @@ from make_bag_tags_and_report import item_count_to_label_count
 
 # Driver_Timing: route #, route name, # orders, Minutes to complete	Completion TIME	First Order Out	Orders Complete	Vehicle/Driver	Driver arrival
 
-def move_delivery_to_pickup(guest_list_list, route_time_tuple_list, client_info):
-   # the route_time_tuple specifies which route to match, and what time the pickup is to be
-   # it then returns a modified guest_list_list with the matched route moved to a pickup time
+"""Transforms guest visit lists and client info into sorted report-ready lists."""
 
-   # pickup_by_name_list = []
-   pickup_by_time_list = []
-   delivery_with_item_list = []
-   delivery_with_bags_list = []
-   # visit_tuple pickup:   client_id, item_count, time, last_name, first_name)
-   # visit_tuple delivery: client_id, item_count, None, delivery_route, last_name)
-   # route_time_tuple_list = [('Quak','03:45')]
+from dataclasses import dataclass
+from typing import NamedTuple
+from defines import GUEST_LIST_IDX_E
+from make_bag_tags_and_report import item_count_to_label_count
+from make_reports import normalize_phone_number
 
-   delivery_before_move_list = []
-   pickup_on_friday_list = []
-   pickup_on_saturday_list = []
+LONG_ROUTE_LENGTH = 18
+SHORT_ROUTE_LENGTH = 7
+MAX_FIRST_NAME_LEN = 8
+MAX_LAST_NAME_LEN = 13
+MAX_DISPLAY_NAME_LEN = 19
 
-   LONG_ROUTE_LENGTH = 18
-   SHORT_ROUTE_LENGTH = 7
+class ProcessedReportLists(NamedTuple):
+    pickup_by_time_list: list
+    delivery_with_item_list: list
+    delivery_with_bags_list: list
+    delivery_before_move_list: list
+    pickup_on_friday_list: list
+    pickup_on_saturday_list: list
 
-   for g_l_index in range(len(guest_list_list)):
-      for visit_tuple in guest_list_list[g_l_index]:
-         client_id = str(visit_tuple[0])
-         if client_id not in client_info:
-            print(f"Visit error: {client_id} missing for {visit_tuple=}")
-            continue
-         first_name = client_info[client_id][0]
-         phone = normalize_phone_number(client_info[client_id][3])
-         item_count = visit_tuple[1]
-         bags = item_count_to_label_count(item_count)
-         
-         if g_l_index == GUEST_LIST_IDX_E.Delivery.value:
-            last_name = visit_tuple[4][:19] # has asterisk in last name for priority
-            route = visit_tuple[3].replace(" - ",": ").replace("- ",": ").replace(",", "-")[:LONG_ROUTE_LENGTH]
-            delivery_before_move_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
 
-            # move from delivery to pickup:  example route tuple: [('Quak','03:45')]
-            matched_route = next((rt for rt in route_time_tuple_list if rt[0] in visit_tuple[3]), None)
-            if matched_route:
-               moved_visit_with_items = [visit_tuple[0], first_name, last_name, matched_route[1], item_count]
-               # add route to first name for the pickup expeditor report
-               route_plus_first_name = f"{matched_route[0][:4]}: {first_name[:8]}"
-               moved_visit_with_bags = [visit_tuple[0], "", "", bags, matched_route[1], route_plus_first_name, last_name, item_count, phone]
-               pickup_by_time_list.append(moved_visit_with_bags)
+def _format_route(raw_route: str | None) -> str:
+    if not raw_route:
+        return ""
+    return (
+        raw_route.replace(" - ", ": ")
+        .replace("- ", ": ")
+        .replace(",", "-")[:LONG_ROUTE_LENGTH]
+    )
+
+
+def move_delivery_to_pickup(
+    guest_list_list: list[list],
+    route_time_tuple_list: list[tuple[str, str]],
+    client_info: dict[str, list],
+) -> ProcessedReportLists:
+    """Relocates designated delivery routes to pickup slots and formats lists for PDF reports."""
+    pickup_by_time_list = []
+    delivery_with_item_list = []
+    delivery_with_bags_list = []
+    delivery_before_move_list = []
+    pickup_on_friday_list = []
+    pickup_on_saturday_list = []
+
+    for g_l_index, guest_list in enumerate(guest_list_list):
+        for visit_tuple in guest_list:
+            client_id = str(visit_tuple[0])
+            if client_id not in client_info:
+                print(f"Visit error: {client_id} missing for {visit_tuple=}")
+                continue
+
+            info = client_info[client_id]
+            first_name = info[0]
+            phone = normalize_phone_number(info[3])
+            item_count = visit_tuple[1]
+            bags = item_count_to_label_count(item_count)
+
+            if g_l_index == GUEST_LIST_IDX_E.Delivery.value:
+                raw_route = visit_tuple[3] or ""
+                last_name = visit_tuple[4][:MAX_DISPLAY_NAME_LEN]
+                route = _format_route(raw_route)
+
+                delivery_before_move_list.append([
+                    client_id,
+                    first_name[:MAX_FIRST_NAME_LEN],
+                    last_name[:MAX_LAST_NAME_LEN],
+                    route[:SHORT_ROUTE_LENGTH],
+                    item_count,
+                ])
+
+                # Match against requested route relocations
+                matched_rule = next(
+                    (rule for rule in route_time_tuple_list if rule[0] in raw_route),
+                    None,
+                )
+
+                if matched_rule:
+                    route_prefix, pickup_time = matched_rule
+                    route_plus_first_name = f"{route_prefix[:4]}: {first_name[:MAX_FIRST_NAME_LEN]}"
+                    moved_visit_with_bags = [
+                        client_id, "", "", bags, pickup_time,
+                        route_plus_first_name, last_name, item_count, phone,
+                    ]
+                    pickup_by_time_list.append(moved_visit_with_bags)
+                else:
+                    delivery_with_item_list.append([
+                        client_id,
+                        first_name[:MAX_FIRST_NAME_LEN],
+                        last_name[:MAX_LAST_NAME_LEN],
+                        route[:SHORT_ROUTE_LENGTH],
+                        item_count,
+                    ])
+                    delivery_with_bags_list.append([
+                        client_id, "", "", bags, route,
+                        first_name, last_name, item_count, phone,
+                    ])
             else:
-               delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:SHORT_ROUTE_LENGTH], item_count])
-               delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
-         else:
-            last_name = client_info[client_id][1][:19] #does not have asterisk for sorting
-            pickup_time = visit_tuple[2][:5]
-            # Saturday pickups will naturally sort to the end when sorting by time since they are 8 to 12.
-            visit_with_items = [visit_tuple[0], first_name[:8], last_name[:13], pickup_time, item_count]
-            # pickup_by_name_list.append(visit_with_items)
-            visit_with_bags = [visit_tuple[0], "", "",bags, pickup_time, first_name, last_name, item_count, phone]
-            pickup_by_time_list.append(visit_with_bags)
+                last_name = info[1][:MAX_DISPLAY_NAME_LEN]
+                pickup_time = (visit_tuple[2] or "")[:5]
 
-            if g_l_index == GUEST_LIST_IDX_E.Pickup_Saturday.value:
-               pickup_on_saturday_list.append(visit_with_items)
-            else:
-               pickup_on_friday_list.append(visit_with_items)
-      
-   # for i, visit in enumerate(pickup_by_name_list):
-   #    print(f"{visit} ", end="")
-   #    if i > 3: print(); break
+                visit_with_items = [
+                    client_id,
+                    first_name[:MAX_FIRST_NAME_LEN],
+                    last_name[:MAX_LAST_NAME_LEN],
+                    pickup_time,
+                    item_count,
+                ]
+                visit_with_bags = [
+                    client_id, "", "", bags, pickup_time,
+                    first_name, last_name, item_count, phone,
+                ]
+                pickup_by_time_list.append(visit_with_bags)
 
-   # visit_with_items = [visit_tuple[0], first_name[:8], last_name[:13], pickup_time, item_count]
-   pickup_items_sort_func = lambda x: (x[2], x[1])  #sort by last_name, first_name
-   # pickup_by_name_list.sort(key=pickup_items_sort_func)
-   pickup_on_saturday_list.sort(key=pickup_items_sort_func)
-   pickup_on_friday_list.sort(key=pickup_items_sort_func)
+                if g_l_index == GUEST_LIST_IDX_E.Pickup_Saturday.value:
+                    pickup_on_saturday_list.append(visit_with_items)
+                else:
+                    pickup_on_friday_list.append(visit_with_items)
 
-   # visit_with_bags = [visit_tuple[0], "", "",bags, pickup_time, first_name, last_name, item_count, phone]
-   #delivery_with_bags_list.append([visit_tuple[0], "", "", bags, route, first_name, last_name, item_count, phone])
-   bags_sort_func = lambda x: (x[4], x[6], x[5])  #sort by time/route, last_name, first_name
-   pickup_by_time_list.sort(key=bags_sort_func)
-   delivery_with_bags_list.sort(key=bags_sort_func)
+    # Sort reports
+    pickup_on_saturday_list.sort(key=lambda x: (x[2].lower(), x[1].lower()))
+    pickup_on_friday_list.sort(key=lambda x: (x[2].lower(), x[1].lower()))
 
-   #delivery_with_item_list.append([visit_tuple[0], first_name[:8], last_name[:13], route[:7], item_count])
-   delivery_items_sort_func = lambda x: (x[3], x[2], x[1])  #sort by route, last_name, first_name
-   delivery_before_move_list.sort(key=delivery_items_sort_func)
-   delivery_with_item_list.sort(key=delivery_items_sort_func)
+    pickup_by_time_list.sort(key=lambda x: (x[4], x[6].lower(), x[5].lower()))
+    delivery_with_bags_list.sort(key=lambda x: (x[4], x[6].lower(), x[5].lower()))
 
-   return pickup_by_time_list, delivery_with_item_list, delivery_with_bags_list, \
-       delivery_before_move_list, pickup_on_friday_list, pickup_on_saturday_list
+    delivery_before_move_list.sort(key=lambda x: (x[3], x[2].lower(), x[1].lower()))
+    delivery_with_item_list.sort(key=lambda x: (x[3], x[2].lower(), x[1].lower()))
 
+    return ProcessedReportLists(
+        pickup_by_time_list=pickup_by_time_list,
+        delivery_with_item_list=delivery_with_item_list,
+        delivery_with_bags_list=delivery_with_bags_list,
+        delivery_before_move_list=delivery_before_move_list,
+        pickup_on_friday_list=pickup_on_friday_list,
+        pickup_on_saturday_list=pickup_on_saturday_list,
+    )
