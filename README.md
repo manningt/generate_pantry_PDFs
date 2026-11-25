@@ -1,36 +1,29 @@
 # Introduction
 At the close of accepting orders from guests, currently at 12:15 on Thursdays, the following reports need to be generated:
-- Pickup expeditor: a table with columns: Bags, Pickup Time, First & Last Names, and phone numbers:
-    - The bags column is blank, it is used in the fulfillment process to check that orders have been taken by a shopper, completed and something else.
+- Pickup expeditor: a table with columns: Shop, Bags, Pickup Time, First & Last Names, and phone numbers:
+    - The Shop & Bags columns are blank, they are used in the fulfillment process to check that orders have been taken by a shopper, completed and something else.
     - The rows are sorted by Pickup time, last name, first name
     - the guest's phone number is included in case they do not show up at the pickup time.
-    - The file naming convention is: Pickups_by_time_MM-DD where DD is the Friday of the week.  These reports are maintained in a folder indicating the year.
-    - Saturday pickups are on a seperate page.
-- Pickups sorted by name
-    - same columns the Pickup expeditor, but sorted by last name, first name.
-    - The file naming convention is: Pickups_by_name_MM-DD
-- Delivery expeditor: a table with columns: Bags, Delivery Route, First & Last Names & phone:
-    - Like the Pickup Expeditor, the bags column is blank
-    - The rows are sorted by Delivery Route, last name, first name
-    - Some orders on a delivery-route can be picked up instead of delivered.  Currently orders on the Quaker delivery route are picked up at 3:45.  These orders are moved from the delivery expeditor files to the pickup expeditor flags - but not the bag tag printing files.  When moved to the Pickup list, the delivery route is used instead of their first name.
-    - A few guests have priority - their orders are shopped first for that delivery route.  This is indicated by an asterisk preceding their last name, so they get sorted to be before the other guests.
+    - The file naming convention is: Pickup_Expeditor_MM-DD where DD is the Friday of the week.  These reports are maintained in a folder indicating the year.
+    - both a PDF and excel version are created.
+    - The excel files are used to enter actual bag counts used per guest.  They can also be used if major modifications are required to the expeditor PDFs.
+- Delivery expeditor: a table with columns: Shop, Bags, Delivery Route, First & Last Names & phone:
+    - same as Pickup Expeditor, but the rows are sorted by Delivery Route, last name, first name
+    - Some orders on a delivery-route can be picked up instead of delivered.  Currently orders on the Quaker delivery route are picked up at 3:45.  These orders are moved from the delivery expeditor files to the pickup expeditor flags - but not the bag tag printing files.
+    - Some delivery guests have priority - their orders are shopped first for that delivery route.  This is indicated by an asterisk preceding their last name, so they get sorted to be before the other guests.
 - Delivieries_per_route PDF:
     - A table of guests per route per page (or multiple pages).
     - The table columns are Bags, First, Last Name, Street, Unit, Phone
     - current routes printed are: Sullivan, James Steel Mill (JSM), YWCA Salisbury Square, and Heritage House
-- Delivery_Tally.csv
-    - A table where the first column is the delivery route name and the 2nd column is the number of deliveries for that route.
-- Pickup & Delivery CSV files used for tracking bags per guest.  The columns are Bags[used], Bags[calculated], Labels, Items, First, Last, Route/Pickup Time.
-    - After orders have been filled, the first column is edited with the actual number of bags used.  Analysis of these files is done at a later time to refine the number of bags required per number of items.
-    - The Labels column contains the number of bags required for the number of items in the order.  The item to bag calculation is done by the program.
-    - The items column is included in order to have all the data necessary to analyze the items to bag calculation.
+- Delivery_Timing_Schedule_MM_DD.xslx
+    - A row per route with the number of guests per route and additional columns to be filled in the delivery coordinator
 - Tag/Label PDFs
     - 4 PDFs are generated: 1 Delivery and 3 Pickups (Friday_before_3, Friday_after_3, and Saturday).
     - The delivery labels have the route at the top, followed by the guest's first and last name, and a page count, e.g. 3 of 6.  The labels are printed in order of delivery route, last name.
     - The pickup labels have the first, last names and the page count, and are ordered by Last name, First name, rather than pickup time.
      - A thermal printer is used to print the 2x4 labels - this printing is done manually after downloading the 4 PDFs from the food pantry's Google Team drive.
-- list-of-guests-in-tag-pdf-files
-    - A single file with a table of first and last names, pickup time or route, and number of items.  There are separate pages for Delivery, before 3, after 3 and Saturday.
+- Deliveries-and-Pickups-2column_MM-DD.pdf
+    - A single file with a table of first and last names, pickup time or route, and number of items.  There are separate pages for Delivery, Friday and Saturday.
 
 # Implementation
 A program written in Python retrieves a list of guests and a list of this week's orders using the PantrySoft API.  For ease of deployment, it runs on a [small computer](https://en.wikipedia.org/wiki/Raspberry_Pi), located inside the food pantry (on the shelf with the router). The computer uses the pantry's WiFi network to access to the internet. The computer does not have a keyboard or display and is accessed using a VPN service and [Tailscale](tailscale.com).
@@ -55,12 +48,14 @@ The program does the following:
     - a function parses the returned list of client data to extract the client information
 2. generate a list of visits during the current week (Friday, Saturday).
     - If the script is not run on a Thursday, then it runs in 'test-mode' and uses hardcoded dates.
-3. generate 4 bag tag PDFs for the visits (delivery, Friday, Saturday) as well as a report PDF listing the guests in alphabetical order.
-4. generate 2 expeditor PDFs: pickup and delivery
-5. generate Pickups_by_name PDF to help with shopping preperation.
-6. generate 2 CSV files to be used for tracking bag counts per item count
-7. upload the generated files to Google Drive: /Newbury Food Pantry/PANTRYSOFT ORDER DOCUMENTS/20xx/Tags where 20xx is the year, starting with 2026
-8. Print the letter sized PDFs on the Pantry printer.
+3. generate 3 bag tag PDFs for the visits (delivery, Friday, Saturday) as well as a report PDF listing the guests in alphabetical order.
+4. generate 2 expeditor excel files: pickup and delivery, sorted by time.  
+5. generate 2 expeditor PDFs: pickup and delivery which have the same content as the xlsx files, but can be printed on the local printer from the small computer.
+6. generate a PDF 'Pickups_Saturday_Staging_MM-DD.pdf' which has extra columns to indicate the location of the staged orders.
+7. generate a excel file for Delivery Timing which lists the deliveries per route.  This is used by the Delivery coordinator.
+8. generate a PDF 'Deliveries_for_Sullivan_JSM_etc' that has separate pages for delivery routes that are buildings, where there are a lot if guests per single address.  This is used by the delivery people.
+9. upload the generated files to Google Drive: /Newbury Food Pantry/PANTRYSOFT ORDER DOCUMENTS/20xx/Tags where 20xx is the year, starting with 2026
+10. Print the letter sized PDFs with cover pages on the Pantry printer, which is a WiFi printer and is accessible from the small computer.
 
 ## upload_folder_to_gdrive
 Functions in this module:
@@ -78,6 +73,10 @@ Functions in this module:
     - authenticates
     - calls upload_file_to_drive for each file
   - upload_file_to_drive(service, local_file_path, parent_id):
+### Google API
+The program uses OAuth2 authentication to access the Google Drive.  As such it requires an API key.  API keys are obtained on a per project basis from the [google API console](https://console.cloud.google.com/welcome?project=write-to-drive-503409) which is currently in Tom's developer account.
+
+When a Google Project is created, then a credentials.json file can be downloaded from the authorization page for the project. However, in order for the generate.py script to access the Google Drive, a new token needs to be generated for the small computer every 7 days. The token generation needs access to a browser for the authentication. So currently a new token is generated on Tom's laptop and then copied to the small computer.
 
 ## make_this_fridays_folder program
 This program is run every Monday to create the folder YYYY/MONTH/MON-DD, if it doesn't exist.  MONTH is the full name.  MON is the 3 letter abbreviation, except for September, which is 4 characters.  The folder needs to be created before Tuesday, because the caller supervisor uploads a spreadsheet named *Master List for Calling  Month Day Year*.  On Thursdays, the *generate.py* script uploads to this Friday's folder.
