@@ -43,7 +43,7 @@ def parse_visit_response(response_data, guest_visit_lists, this_weeks_dates, cli
 
       item_count = int(item_count)
       if item_count == 0:
-         print(f"Warning: visit has no items: {visit_dict['visit_type']=} {visit_dict['id']=} {visit_dict['visit_datetime']=} {visit_dict['client_id']=}")
+         print(f"\nWarning: visit has no items: clientId={visit_dict['client_id']} date={visit_dict['visit_datetime']} type={visit_dict['visit_type']} {visit_dict['id']=} ")
          continue
 
       first_name = client_info_dict[client_id_str][0]
