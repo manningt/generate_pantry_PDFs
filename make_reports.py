@@ -25,7 +25,7 @@ def normalize_phone_number(number):
 
 def write_report_pdf(guest_list, report_title, output_directory, pdf_report_filename, table_def):
    if len(guest_list) == 0:
-      print("Failure: no guest lists in request to generate PDF report on tag files.")
+      print("Failure: no guest lists in request to generate pdf_report_filename.")
       return False
    
    pdf_report_path = os.path.join(output_directory, pdf_report_filename)
@@ -184,7 +184,7 @@ def write_counts_xlsx(guest_list, output_directory, filename):
 
 def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, client_info, this_weeks_date, routes_to_print):
    if len(deliveries_list) == 0:
-      print("Failure: no guest lists in request to generate PDF report on tag files.")
+      print(f"Failure: no guest lists in request to generate {pdf_filename}.")
       return False
 
    guests_on_route_list = []
@@ -211,11 +211,15 @@ def write_delivery_routes_pdf(deliveries_list, output_directory, pdf_filename, c
          pdf_filename_list.append(route_pdf_filename)
 
    # merge the PDFs per route
+   if len(pdf_filename_list) == 0:
+      print(f"Failure: no guest lists in request to generate {pdf_filename}.")
+      return False
    merger = PdfMerger()
    for pdf in pdf_filename_list:
       merger.append(os.path.join("/tmp", pdf))
    merger.write(os.path.join(output_directory, pdf_filename))
    merger.close()
+   return True
 
    # for pdf in pdf_filename_list:
    #    try:
