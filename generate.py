@@ -118,6 +118,7 @@ if __name__ == "__main__":
       guest_visit_lists = get_visits(pantrysoft_token, this_weeks_dates, client_info_dict)
       if len(guest_visit_lists[0]) < 1:
          print(f"Quiting: no visits found for {this_weeks_dates}")
+         # sys.exit()
       else:
          with open(TEMPORARY_GUEST_VISIT_LIST_FILENAME, "w") as fp:
             json.dump(guest_visit_lists , fp)
@@ -217,14 +218,19 @@ if __name__ == "__main__":
    files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, deliveries_per_route_filename))
 
    # merge the 2-column PDFs
-   dual_column_filename = f'Deliveries-and-Pickups-2column_{friday_MM_DD}.pdf'
-   merger = PdfMerger()
-   for pdf in files_to_merge:
-      merger.append(os.path.join("/tmp", pdf))
-   merger.write(os.path.join(LOCAL_FOLDER_PATH, dual_column_filename))
-   merger.close()
-   files_to_print.append("./cover-pages/cover_Deliveries-and-Pickups-2column.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, dual_column_filename))
+   if len(files_to_merge) == 0:
+      print(f"Warning: no 2-column PDFs to merge.")
+   elif len(files_to_merge) == 1:
+      print(f"Warning: Only one 2-column PDF to merge: {files_to_merge[0]}")
+   else:
+      dual_column_filename = f'Deliveries-and-Pickups-2column_{friday_MM_DD}.pdf'
+      merger = PdfMerger()
+      for pdf in files_to_merge:
+         merger.append(os.path.join("/tmp", pdf))
+      merger.write(os.path.join(LOCAL_FOLDER_PATH, dual_column_filename))
+      merger.close()
+      files_to_print.append("./cover-pages/cover_Deliveries-and-Pickups-2column.pdf")
+      files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, dual_column_filename))
 
    if test_mode:
       print(f'Test mode: skipping upload & printing of {files_to_print}')
