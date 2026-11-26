@@ -1,9 +1,8 @@
 # make_reports.py
 import os
-from fpdf import FPDF, table
+from fpdf import FPDF, table  # pyrefly: ignore [missing-import]
 from PyPDF2 import PdfMerger # pyrefly: ignore [missing-import]
 from defines import FRIDAY_IDX, SATURDAY_IDX, Table_def_deliveries_by_route, Table_def_saturday_staging
-import csv
 import xlsxwriter # pyrefly: ignore [missing-import]
 import math
 
@@ -138,6 +137,10 @@ def write_report_pdf(guest_list, report_title, output_directory, pdf_report_file
 
 
 def write_counts_xlsx(guest_list, output_directory, filename):
+
+   if len(guest_list) == 0:
+      print(f"Failure: no guest lists in request to generate {filename}.")
+      return False
 
    if len(guest_list[0][I_TIME_ROUTE]) == 5:
       generate_pickup_file = True
