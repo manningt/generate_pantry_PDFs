@@ -25,7 +25,7 @@ def normalize_phone_number(number):
 
 def write_report_pdf(guest_list, report_title, output_directory, pdf_report_filename, table_def):
    if len(guest_list) == 0:
-      print("Failure: no guest lists in request to generate pdf_report_filename.")
+      print(f"Failure: no guest lists in request to generate {pdf_report_filename}.")
       return False
    
    pdf_report_path = os.path.join(output_directory, pdf_report_filename)
