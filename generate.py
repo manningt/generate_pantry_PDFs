@@ -118,7 +118,7 @@ if __name__ == "__main__":
       guest_visit_lists = get_visits(pantrysoft_token, this_weeks_dates, client_info_dict)
       if len(guest_visit_lists[0]) < 1:
          print(f"Quiting: no visits found for {this_weeks_dates}")
-         # sys.exit()
+         sys.exit()
       else:
          with open(TEMPORARY_GUEST_VISIT_LIST_FILENAME, "w") as fp:
             json.dump(guest_visit_lists , fp)
