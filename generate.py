@@ -202,20 +202,20 @@ if __name__ == "__main__":
       report_header = f"{report[REPORT_HEADER]} {report[DAY]}"
       # kludgy: generate 2-column PDFs in /tmp
       folder_path = LOCAL_FOLDER_PATH if report[PRINT_IT] else "/tmp"
-      write_report_pdf(report[LIST_NAME], report_header, folder_path, report_filename, report[TABLE_DEF])
-      if report[PRINT_IT]:
-         if report[COVER_FILE]:
-            files_to_print.append(os.path.join(COVER_PAGES_FOLDER_PATH, report[COVER_FILE]))
-         files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, report_filename))
-      else:
-         files_to_merge.append(report_filename)
+      if write_report_pdf(report[LIST_NAME], report_header, folder_path, report_filename, report[TABLE_DEF]):
+         if report[PRINT_IT]:
+            if report[COVER_FILE]:
+               files_to_print.append(os.path.join(COVER_PAGES_FOLDER_PATH, report[COVER_FILE]))
+            files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, report_filename))
+         else:
+            files_to_merge.append(report_filename)
          
    deliveries_per_route_filename = f'Deliveries_for_Sullivan_JSM_etc_{friday_MM_DD}.pdf'
    delivery_routes_to_print = ["01", "04", "08", "09", "20"]
-   write_delivery_routes_pdf(delivery_with_bags_list, LOCAL_FOLDER_PATH, deliveries_per_route_filename, \
-       client_info_dict, this_weeks_dates, delivery_routes_to_print)
-   files_to_print.append("./cover-pages/cover-Deliveries-for_Sullivan_JSM_etc.pdf")
-   files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, deliveries_per_route_filename))
+   if write_delivery_routes_pdf(delivery_with_bags_list, LOCAL_FOLDER_PATH, \
+         deliveries_per_route_filename, client_info_dict, this_weeks_dates, delivery_routes_to_print):
+      files_to_print.append("./cover-pages/cover-Deliveries-for_Sullivan_JSM_etc.pdf")
+      files_to_print.append(os.path.join(LOCAL_FOLDER_PATH, deliveries_per_route_filename))
 
    # merge the 2-column PDFs
    if len(files_to_merge) == 0:
